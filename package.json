@@ -1,0 +1,19 @@
+{
+    "devDependencies": {
+        "typescript": "^7.0.2"
+    },
+    "scripts": {
+        "build": "tsup src/index.ts --format esm,cjs --dts --minify --clean"
+    },
+    "name": "yamp",
+    "version": "0.0.5",
+    "type": "module",
+    "main": "./dist/main.ts",
+    "types": "./dist/index.d.ts",
+    "exports": {
+        ".": "./dist/index.js"
+    },
+    "dependencies": {
+        "tsup": "^8.5.1"
+    }
+}
