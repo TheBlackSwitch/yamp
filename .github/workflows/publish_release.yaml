@@ -28,8 +28,8 @@ jobs:
           registry-url: "https://registry.npmjs.org"
           package-manager-chache: false
 
-      - name: Setup pnmp
-        uses: pnpm/action-setup@v4
+      - name: Setup nmp
+        uses: npm/action-setup@v4
         with:
           version: 10
           
@@ -38,10 +38,10 @@ jobs:
           npm version "${{ inputs.version }}" --no-git-tag-version
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm install --frozen-lockfile
 
       - name: Build
-        run: pnpm run build
+        run: npm run build
 
       - name: Publish to npm
         run: npm publish
