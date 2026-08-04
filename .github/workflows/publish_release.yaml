@@ -7,12 +7,7 @@ on:
         description: Publish Version
         required: true
         type: string
-        default: 0.0.0
-
-      changelog:
-        description: Changelog
-        required: false
-        type: string      
+        default: 0.0.0    
 
 permissions:
   contents: write
@@ -57,7 +52,7 @@ jobs:
 
       - name: Create release notes
         run: |
-          CHANGELOG="${{ inputs.changelog }}"
+          CHANGELOG="$(cat CHANGELOG.md)"
           VERSION="${{ inputs.version }}"
 
           cat > release-notes.md <<EOF
