@@ -7,7 +7,7 @@ on:
         description: Publish Version
         required: true
         type: string
-        default: 0.0.0
+        default: 0.0.0    
 
 permissions:
   contents: write
@@ -50,6 +50,39 @@ jobs:
           git commit -m "Release v${{ inputs.version }}"
           git push
 
+      - name: Create release notes
+        run: |
+          CHANGELOG="$(cat CHANGELOG.md)"
+          VERSION="${{ inputs.version }}"
+
+          cat > release-notes.md <<EOF
+          $CHANGELOG
+
+          ---
+          ### :computer: Installing
+
+          There are 3 install methods available. Pick one that suits you the best.
+
+          **NPM**
+
+          \`\`\`
+          $npm install @theblackswitch/yamp@$VERSION
+          \`\`\`
+
+          **ES module**
+
+          \`\`\`js
+          import * as YAMP from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"
+          \`\`\`
+
+          **HTML Script**
+
+          \`\`\`html
+          <script src="https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.global.js"></script>
+          \`\`\`
+          EOF
+
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,19 +91,4 @@ jobs:
 
           gh release create "v$VERSION" \
             --title "v$VERSION" \
-            --notes "# :computer: Installing
-
-          **npm**
-
-          \`\`$npm install @theblackswitch/yamp@$VERSION\`\`
-
-          https://www.npmjs.com/package/@theblackswitch/yamp/v/$VERSION
-
-          **ES module**
-
-          \`\`import * as Yamp from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"\`\`
-
-          **Browser script**
-
-          \`\`<script src="https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.g"></script>\`\`
-        
+            --notes-file release-notes.md
