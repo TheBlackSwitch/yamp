@@ -1,5 +1,54 @@
 "use strict";
-(() => {
+var Yamp = (() => {
+  var __defProp = Object.defineProperty;
+  var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+  var __getOwnPropNames = Object.getOwnPropertyNames;
+  var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+  var __copyProps = (to, from, except, desc) => {
+    if (from && typeof from === "object" || typeof from === "function") {
+      for (let key of __getOwnPropNames(from))
+        if (!__hasOwnProp.call(to, key) && key !== except)
+          __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+    }
+    return to;
+  };
+  var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
+
+  // src/main.ts
+  var main_exports = {};
+  __export(main_exports, {
+    AlternateHeader: () => AlternateHeader,
+    BlockQuote: () => BlockQuote,
+    CharMap: () => CharMap,
+    Code: () => Code,
+    CodeBlock: () => CodeBlock,
+    Emphasis: () => Emphasis,
+    EscapeIncompleteHtml: () => EscapeIncompleteHtml,
+    Header: () => Header,
+    HorizontalRule: () => HorizontalRule,
+    Image: () => Image,
+    InlineModifer: () => InlineModifer,
+    InlineParser: () => InlineParser,
+    IsTypeOf: () => IsTypeOf,
+    Link: () => Link,
+    List: () => List,
+    MultilineParser: () => MultilineParser,
+    Paragraph: () => Paragraph,
+    Parser: () => Parser,
+    SingleLineParser: () => SingleLineParser,
+    Strikethrough: () => Strikethrough,
+    StringHelper: () => StringHelper,
+    Table: () => Table,
+    UnderscoreEmphasis: () => UnderscoreEmphasis,
+    default_options: () => default_options,
+    parse: () => parse,
+    set_options: () => set_options
+  });
+
   // src/utils.ts
   var StringHelper = class {
     static CHAR_CODE = {
@@ -1719,4 +1768,5 @@
       throw new Error("[Markdown]: failed to parse, invalid options! Field 'finalize_spaces' must be of type boolean");
     }
   }
+  return __toCommonJS(main_exports);
 })();
