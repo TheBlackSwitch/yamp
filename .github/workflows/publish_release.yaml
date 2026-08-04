@@ -9,6 +9,11 @@ on:
         type: string
         default: 0.0.0
 
+      changelog:
+        description: Changelog
+        required: false
+        type: string      
+
 permissions:
   contents: write
   id-token: write
@@ -52,21 +57,27 @@ jobs:
 
       - name: Create release notes
         run: |
+          CHANGELOG="${{ inputs.changelog }}"
           VERSION="${{ inputs.version }}"
 
           cat > release-notes.md <<EOF
-          # :computer: Installing
+          $CHANGELOG
 
-          **npm**
+          ---
+          ### :computer: Installing
 
-          \`\`\`bash
-          npm install @theblackswitch/yamp@$VERSION
+          There are 3 install methods available. Pick one that suits you the best.
+
+          **NPM**
+
+          \`\`\`
+          $npm install @theblackswitch/yamp@$VERSION
           \`\`\`
 
           **ES module**
 
           \`\`\`js
-          import * as Yamp from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"
+          import * as YAMP from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"
           \`\`\`
 
           **HTML Script**
