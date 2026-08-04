@@ -50,6 +50,33 @@ jobs:
           git commit -m "Release v${{ inputs.version }}"
           git push
 
+      - name: Create release notes
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          cat > release-notes.md <<EOF
+          # :computer: Installing
+
+          **npm**
+
+          \`\`\`bash
+          npm install @theblackswitch/yamp@$VERSION
+          \`\`\`
+
+          **ES module**
+
+          \`\`\`js
+          import * as Yamp from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"
+          \`\`\`
+
+          **HTML Script**
+
+          \`\`\`html
+          <script src="https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.global.js"></script>
+          \`\`\`
+          EOF
+
+
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -58,17 +85,4 @@ jobs:
 
           gh release create "v$VERSION" \
             --title "v$VERSION" \
-            --notes "# :computer: Installing
-
-          **npm**
-
-          \`\`$npm install @theblackswitch/yamp@$VERSION\`\`
-
-          **ES module**
-
-          \`\`import * as Yamp from \"https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js\"\`\`
-
-          **Browser script**
-
-          \`\`<script src=\"https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.g\"></script>\`\`
-        
+            --notes-file release-notes.md
