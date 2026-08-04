@@ -508,7 +508,7 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
       return Parser.FAIL;
     }
     let next_line = all_lines[line_idx + 1] ? all_lines[line_idx + 1] : null;
-    if (!next_line) return Parser.FAIL;
+    if (next_line === null || next_line === void 0) return Parser.FAIL;
     CHAR_MAP.apply_que();
     if (!this.try_extend(ast, text, next_line)) {
       return new _BlockQuote(text, next_line, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
@@ -539,11 +539,7 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
     let out = "<blockquote>";
     for (const ast_ast_node of this.#ast) {
       if (IsTypeOf.cachedAstNode(ast_ast_node)) continue;
-      if (options.blockquote_intendation === true) {
-        out += `  ${ast_ast_node.generate(options)}`;
-      } else {
-        out += `${ast_ast_node.generate(options)}`;
-      }
+      out += `${ast_ast_node.generate(options)}`;
     }
     out += "</blockquote>";
     return out;

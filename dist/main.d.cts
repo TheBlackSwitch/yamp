@@ -149,7 +149,6 @@ type ast = Array<ast_node | cached_ast_node>;
 interface options {
     enabled_features?: parsers,
     disable_paragraph_elements?: boolean,
-    blockquote_intendation?: boolean,
     enable_trailing_linebreaks?: boolean,
     literal_mid_word_underscores?: boolean,
     add_zero_width_space_for_cursor_positions?: boolean,
