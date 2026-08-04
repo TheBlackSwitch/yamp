@@ -64,13 +64,11 @@ jobs:
 
           \`\`$npm install @theblackswitch/yamp@$VERSION\`\`
 
-          https://www.npmjs.com/package/@theblackswitch/yamp/v/$VERSION
-
           **ES module**
 
-          \`\`import * as Yamp from "https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js"\`\`
+          \`\`import * as Yamp from \"https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.js\"\`\`
 
           **Browser script**
 
-          \`\`<script src="https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.g"></script>\`\`
+          \`\`<script src=\"https://cdn.jsdelivr.net/npm/@theblackswitch/yamp@$VERSION/dist/main.g\"></script>\`\`
         
