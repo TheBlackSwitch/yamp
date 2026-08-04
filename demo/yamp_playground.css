@@ -1,0 +1,204 @@
+
+.editor_container {
+    width: 90%;
+}
+
+.focus .editor_container {
+    margin-top: 5px;
+}
+
+.focus .page {
+    padding: 0;
+}
+
+.markdown_nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    border-radius: 5px 5px 0px 0px;
+    background-color: #424242;
+    gap: 5px;
+    overflow: visible;
+    flex-wrap: wrap;
+}
+
+.button {
+    padding: 5px;
+    background-color: #545454;
+    border-radius: 5px;
+    transform: scale(1.0);
+    transition: transform 0.1s;
+    cursor: pointer;
+    user-select: none;
+    z-index: 10;
+}
+
+.button:hover {
+    transform: rotate(-1deg);
+}
+
+.button:active {
+    transform: scale(1.025, 1.025);
+}
+
+.input_wrapper {
+    min-height: 80px;
+    border: 2px solid #424242;
+    background-color: #aaa;
+    position: relative;
+    width: calc(100% - 4px);
+    gap: 0px;
+    display: grid;
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 50px 40vh 50px 40vh;
+}
+
+.input_wrapper > h1 {
+    height: 100%;
+    background-color: #323232;
+    padding: 0;
+    margin: 0;
+    width: 100%;
+    text-align: center;
+}
+
+.input_wrapper textarea {
+    border: none;
+    background-color: #2F2F2F;
+    outline: none;
+    color: #aaa;
+    padding: 5px;
+    position: relative;
+    scrollbar-width: thin;
+    scrollbar-color: #545454 #424242;
+    display: block;
+    resize: none;
+    scrollbar-gutter: auto;
+    border: 1px solid #424242;
+    box-shadow: 2px 2px 3px inset #00000088;
+}
+
+.markdown_output, .charmap_output {
+    background-color: #2F2F2F;
+    position: relative;
+    overflow-y: scroll;
+    padding: 5px;
+    scrollbar-width: thin;
+    scrollbar-color: #545454 #424242;
+    margin-bottom: 0;
+    scrollbar-gutter: auto;
+    border: 1px solid #424242;
+    box-shadow: 2px 2px 3px inset #00000088;
+}
+
+
+
+.markdown_output p {
+    margin-top: 0px;
+    line-break: loose;
+    position: relative;
+    max-width: 100%;
+    overflow-wrap: break-word;
+    margin-bottom: 0px;
+}
+
+.markdown_output pre {
+    padding-top: 13px;
+    padding-bottom: 13px;
+    padding-left: 5px;
+    margin: 0px;
+    background-color: #323232;
+    border: 1px solid #515151;
+    border-radius: 5px;
+}
+
+.markdown_output pre code {
+    background-color: #00000000;
+    border: none;
+    padding: 0;
+}
+
+.markdown_output code {
+    padding-top: 4px;
+    padding-bottom: 4px;
+    padding-left: 2px;
+    padding-right: 2px;
+    margin: 0px;
+    background-color: #323232;
+    border: 1px solid #515151;
+    border-radius: 5px;
+    display: inline;
+}
+
+.markdown_output blockquote {
+    text-align: left;
+    margin-bottom: 5px;
+    margin-top: 5px;
+    margin-right: 0px;
+}
+
+.markdown_output h1, .markdown_output h2,
+.markdown_output h3, .markdown_output h4,
+.markdown_output h5, .markdown_output h6
+{
+    margin-bottom: 0px;
+    margin-top: 0px;
+}
+
+.markdown_output ul, .markdown_output ol {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    padding-left: 20px;
+}
+
+.markdown_output p {
+    margin-bottom: 5px;
+    margin-top: 5px;
+}
+
+.markdown_output img {
+    position: relative;
+    display: block;
+    max-width: 90%;
+    transition: filter 0.3s;
+}
+
+.markdown_output a:hover img {
+    filter: brightness(1.2);
+}
+
+.markdown_output table {
+    overflow: hidden;
+    border: 1px solid #777;
+    background-color: #222222;
+    border-radius: 5px;
+    margin: none;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.markdown_output thead {
+    padding-bottom: 5px;
+}
+
+.markdown_output thead td {
+    background-color: #2F2F2F;
+}
+
+.markdown_output td {
+    border-bottom: 1px solid #555;
+    border-right: 1px solid #555;
+    padding: 5px;
+}
+
+.markdown_output .footnote {
+    color: #888;
+}
+
+.benchmark_results {
+    background-color: #2F2F2F;
+    border-radius: 2px;
+    padding: 5px;
+}

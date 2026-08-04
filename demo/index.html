@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Theblackswitch - YAMP playground</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://theblackswitch.com/assets/css/common.css?v=4">
+    <link rel="stylesheet" href="./yamp_playground.css?v=1">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-tomorrow.min.css">
+    
+    <meta name="author" content="theblackswitch">
+    <meta name="description" content="JS Library: Yet Another Markdown Parser, focused on live in-text markdown parsing and configurability.">
+    <meta name="keywords" content="theblackswitch, The Black Switch, js, markdown, library, javascript, parser, yet another markdown parser, yamp">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body class="no_scroll">
+    <div class="loader" id="loader">
+        <div class="loader_circle">
+            <img src="https://theblackswitch.com/assets/images/gear.png" class="gear_1">
+            <img src="https://theblackswitch.com/assets/images/gear.png" class="gear_2">
+            <img src="https://theblackswitch.com/assets/images/gear.png" class="gear_3">
+        </div>
+        <h3 class="loader_text">Loading...</h3>
+    </div>
+    <div class="sidebar_container focus_mode_hidden"  id="sidebar">
+        <div class="sidebar">
+            <div class="sidebar_contents">
+                <div class="sidebar_menu home_button">
+                    <h3 class="menu_title"><a href="https://theblackswitch.com/home.html" class="menu_button"><i class="fa-solid fa-house fa-2xl fa-fw"></i></a></h3>
+                </div>
+                <div class="line"></div>
+                <div class="sidebar_menu">
+                    <h3 class="menu_title"><i class="fa-regular fa-file fa-2xl fa-fw"></i>Contents</h3>
+                </div>
+                <div class="line"></div>
+                <div class="sidebar_menu">
+                    <h3 class="menu_title"><i class="fa-solid fa-cloud fa-2xl fa-fw"></i> Socials</h3>
+                    <ul class="sidebar_list">
+                        <li>
+                            <a href="https://buymeacoffee.com/theblackswitch" target="_blank" class="link">
+                                <i class="fa-solid fa-mug-saucer"></i>
+                                <i class="hide_sidebar"> Buy Me a coffee</i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.curseforge.com/members/theblackswitch/projects?page=1&pageSize=20&sortBy=TotalDownloads&sortOrder=Desc" target="_blank" class="link">
+                                <img src="https://theblackswitch.com/assets/images/logo/curseforge.png" class="menu_icon_image">
+                                <i class="hide_sidebar"> Curseforge</i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://github.com/TheBlackSwitch" target="_blank" class="link">
+                                <i class="fa-brands fa-github"></i>
+                                <i class="hide_sidebar"> Github</i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://modrinth.com/user/theblackswitch" target="_blank" class="link">
+                                <img src="../assets/images/logo/modrinth.png" class="menu_icon_image">
+                                <i class="hide_sidebar"> Modrinth</i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.planetminecraft.com/member/theblackswitch/" target="_blank" class="link">
+                                <i class="fa-solid fa-earth-americas"></i>
+                                <i class="hide_sidebar"> Planet MC</i>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="https://www.youtube.com/channel/UCkjLf5Xth_5fT1ByJifDFPA" target="_blank" class="link">
+                                <i class="fa-brands fa-youtube"></i>
+                                <i class="hide_sidebar"> Youtube</i>
+                            </a>
+                        </li>
+                        <!--<li><a href="https://www.instagram.com/theblackswitch01/" target="_blank" class="link"><i
+                                    class="fa-brands fa-instagram"></i><i class="hide_sidebar"> Instagram</i></a></li>-->
+                        <!--<li><a href="https://www.twitch.tv/theblackswitch" target="_blank"><i
+                                    class="fa-brands fa-twitch"></i><i class="hide_sidebar"> Twitch</i></a></li>-->
+
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="sidebar_icon" id="sidebar_icon">
+            <i class="fa-solid fa-bars fa-2xl plus"></i>
+            <i class="fa-solid fa-minus fa-2xl minus"></i>
+        </div>
+    </div>
+    <div class="main" id="main" onclick="">
+        <div class="header focus_mode_hidden">
+            <img src="https://theblackswitch.com/assets/images/theblackswitch-long.jpg" class="logo-top">
+        </div>
+        <div class="scroll_to_top_button focus_mode_hidden hide action-scroll_to_top" id="scroll_to_top">
+            <i class="fa-solid fa-arrow-up fa-2xl"></i>
+        </div>
+        <div class="page">
+            <div class="click_history focus_mode_hidden">
+                <a class="link" href="https://theblackswitch.com/home.html">Theblackswitch</a> > <a class="link" href="#">DEV</a> > <a class="link" href="https://theblackswitch.com/home.html#projects"> Libraries</a> > <a class="link" href="#"> YAMP - playground</a>
+            </div>
+            <div class="generic_container editor_container">
+                <div class="markdown_nav">
+                    <div class="button" id="focus_mode">Focus Mode</div>
+                    <div class="button" id="clear_field"> Clear Field</div>
+                    <div class="button" id="start_benchmark">Start 10s Benchmark</div>
+                    <div class="benchmark_results" id="benchmark_results"></div>
+                </div>
+                <div class="input_wrapper">
+                    <h1>Markdown Input</h1>
+                    <h1>Markdown Output</h1>
+                    <textarea class="markdown_input" id="markdown_input">
+# Example Markdown File
+
+
+Welcome to this sample Markdown document. Markdown is a lightweight markup language that you can use to add formatting elements to plain text.
+
+## Table of Contents
+
+1. [Introduction](#introduction)
+2. [Lists](#lists)
+3. [Links and Images](#links-and-images)
+4. [Code Examples](#code-examples)
+5. [Conclusion](#conclusion)
+5. [Benchmarks](#benchmarks)
+
+## Introduction
+
+Markdown makes it easy to format documents with **bold text**, *italic text*, ***both*** and much more.
+
+## Lists
+
+You can create ordered and unordered lists:
+
+### Ordered List
+
+1. First item
+2. Second item
+3. Third item
+
+### Unordered List
+
+- Item one
+- Item two
+- Item three
+
+## Links and Images
+
+You can add links and images:
+
+[Search me on Google!](https://www.google.com/search?q=theblackswitch)
+
+
+![My logo](https://theblackswitch.com/assets/images/theblackswitch-long.jpg "Awesome logo right?")
+
+## Code Examples
+
+Inline code: `print("Hello, World!")`
+
+Code block:
+
+```python
+def greet():
+    print("Hello, World!")
+
+greet()
+```
+
+## Conclusion
+
+Markdown is an awesome ~~complex~~ tool for writing **clean**, **readable** documents without the complexity of traditional word processors. 
+Whether you're creating documentation, notes, or ``.README`` files, its simple syntax makes formatting quick and intuitive.
+
+Pros:
+- Easy to write
+- Simple syntax which can be remembered
+- Lot's of freedom
+- clean
+- readable
+
+Cons:
+- Isn't very friendly for the parser
+    - much of the syntax is hard to process
+    - Requires many different parser types for the whole variety of features
+- Might not be versatile enough
+- It cost theblackswitch's soul
+
+> I really like markdown. It's my prefered tool for writing documents or emails! - theblackswitch (23/07/2026)
+
+## Benchmarks
+
+These benchmarks are taken from YAMP on this playground with the current example file you.
+
+| Feature | Parsing Time (µs) | Generating time (MB) | Total time (MB) |
+|:--------|------------------:|---------------------:|----------------:|
+                    </textarea>
+                    <div class="markdown_output" id="markdown_output"></div>
+                    <h1>Options</h1>
+                    <h1>Generated CharMap</h1>
+                    <textarea class="markdown_options" id="markdown_options">
+{
+    "enabled_features": [
+        "Header",
+        "AlternateHeader",
+        "BlockQuote",
+        "Emphasis",
+        "UnderscoreEmphasis",
+        "List",
+        "Code",
+        "CodeBlock",
+        "Link",
+        "Image",
+        "HorizontalRule",
+        "Table",
+        "EscapeIncompleteHtml"
+    ],
+    "literal_mid_word_underscores": true,
+    "disable_paragraph_elements": false,
+    "enable_trailing_linebreaks": true,
+    "literal_mid_word_underscores": true,
+    "add_zero_width_space_for_cursor_positions": true,
+    "finalize_spaces": true,
+}
+                    </textarea>
+                    <div class="charmap_output" id="charmap_output"></div>
+                </div>
+            </div>
+        </div>
+        <div class="footer focus_mode_hidden">
+            <img src="https://theblackswitch.com/assets/images/theblackswitch-long.jpg" class="logo-bottom">
+            <p>theblackswitch.com &#169; <span id="curr_year"></span> by theblackswitch</p>
+        </div>
+    </div>
+
+    <script src="https://theblackswitch.com/assets/js/lib.js?v=4"></script>
+    <script type="module" src="./yamp_playground.js?v=1"></script>
+    <script type="module" src="./common.js?v=4"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/prismjs@1/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        Prism.languages.mcfunction = {
+            'comment': /^#.*/gm,
+            'keyword': /(?<=run\s|^)(?:advancement|attribute|ban|ban-ip|banlist|bossbar|clear|clone|damage|data|datapack|debug|defaultgamemode|deop|difficulty|effect|enchant|execute|experience|fill|fillbiome|forceload|function|gamemode|gamerule|give|help|item|jfr|kick|kill|list|locate|loot|me|msg|op|pardon|pardon-ip|particle|perf|place|playsound|publish|random|recipe|reload|return|ride|rotate|save-all|save-off|save-on|say|schedule|scoreboard|seed|setblock|setidletimeout|setworldspawn|spawnpoint|spectate|spreadplayers|stop|stopsound|summon|tag|team|teammsg|teleport|tell|tellraw|tick|time|title|tm|tp|transfer|trigger|warden_spawn_tracker|weather|whitelist|worldborder|xp)\b/gm,
+            'selector': /@[anspre]/gm,
+            'namespace': /\b\w+?:[\w\/\.]+/gm,
+            'number': /\b\d+[bfdBFD]?\b/gm,
+            'punctuation': /[~^\\]|\$\(|(?:\)(?<=$([^)]*)))/gm,
+            'operator': /:|=|\+=|-=|\*=|%=|\/|<|>|></gm,
+            'boolean': /\b(?:false|true|1b|0b)\b/gm,
+            'string': {
+                'pattern': /(?:(^|[^\\])"(?:\\.|[^\\"\r\n:])*"(?!\s*:))|(?<=say).*|(?<=tag=)\w*/gm,
+                'lookbehind': true,
+                'greedy': true
+            },
+            'property': {
+                'pattern': /(^|[^\\])"(?:\\.|[^\\"\r\n])*"(?=\s*:)/gm,
+                'lookbehind': true,
+                'greedy': true
+            },
+            'variable': /\b(?:align|anchored|as|at|facing|in|on|positioned|rotated|store|summon|run|(?:if|unless))\b/gm,
+            'function': {
+                'pattern': /(?<=if|unless|result|success)\s(?:biome|block|blocks|data|dimension|entity|function|items|loaded|predicate|score)\b/gm,
+                'lookbehind': true,
+                'greedy': true
+            },
+            'symbol':{
+                'pattern': /(?:#.+?\b)|(?<=@[anspre]\[(?:.*,)?).*?(?==)/gm,
+                'lookbehind': true,
+                'greedy': true
+            } 
+        };
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script src="https://kit.fontawesome.com/67e2f1a364.js" crossorigin="anonymous"></script>
+</body>
+<html>

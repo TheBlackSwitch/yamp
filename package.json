@@ -1,17 +1,18 @@
 {
     "devDependencies": {
-        "typescript": "^7.0.2"
+        "typescript": "^5.7.3"
     },
     "scripts": {
-        "build": "tsup src/index.ts --format esm,cjs --dts --minify --clean"
+        "build": "tsup src/main.ts --format esm,cjs --dts --clean",
+        "demo": "cd ./demo && php -S localhost:8001"
     },
     "name": "yamp",
     "version": "0.0.5",
     "type": "module",
     "main": "./dist/main.ts",
-    "types": "./dist/index.d.ts",
+    "types": "./dist/public_types.d.ts",
     "exports": {
-        ".": "./dist/index.js"
+        ".": "./dist/main.js"
     },
     "dependencies": {
         "tsup": "^8.5.1"
