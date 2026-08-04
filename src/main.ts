@@ -76,7 +76,6 @@ export const default_options: options = {
         EscapeIncompleteHtml // Tbh you shouldn't really disable this one since that will f*ck up your charmap when the md contains html
     ],
     "disable_paragraph_elements": false, // Parse paragraphs without adding the <p> elements
-    "blockquote_intendation": false, // Apply intendation to block quotes
     "literal_mid_word_underscores": true, // Make sure words like hello_world_stuff stay literal and don't become italic
     "add_zero_width_space_for_cursor_positions": true, // Insert zero-width-spaces to differenciate between before and after styling. Useful for carret positions
     "enable_trailing_linebreaks": true, // Put a linebreak at the end of every line, even <h1>text<br></h1>. This is also useful for carret position
