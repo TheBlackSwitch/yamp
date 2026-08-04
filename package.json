@@ -8,7 +8,7 @@
         "demo": "cd ./demo && php -S localhost:8001"
     },
     "name": "@theblackswitch/yamp",
-    "version": "0.0.7",
+    "version": "0.0.8",
     "type": "module",
     "main": "./dist/main.ts",
     "types": "./dist/public_types.d.ts",
