@@ -66,7 +66,7 @@ jobs:
           **NPM**
 
           \`\`\`
-          $npm install @theblackswitch/yamp@$VERSION
+          npm install @theblackswitch/yamp@$VERSION
           \`\`\`
 
           **ES module**
