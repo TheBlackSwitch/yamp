@@ -4,10 +4,10 @@
         "tsup": "^8.5.1"
     },
     "scripts": {
-        "build": "tsup src/main.ts --format esm,cjs --dts --clean",
+        "build": "npx tsup src/main.ts --format esm,cjs,iife --dts --clean",
         "demo": "cd ./demo && php -S localhost:8001"
     },
-    "name": "yamp",
+    "name": "@theblackswitch/yamp",
     "version": "0.0.5",
     "type": "module",
     "main": "./dist/main.ts",
@@ -26,5 +26,8 @@
     "bugs": {
         "url": "https://github.com/TheBlackSwitch/yamp/issues"
     },
-    "homepage": "https://github.com/TheBlackSwitch/yamp#readme"
+    "homepage": "https://github.com/TheBlackSwitch/yamp#readme",
+    "files": [
+        "dist"
+    ]
 }
