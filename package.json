@@ -7,7 +7,7 @@
         "build": "npx tsup src/main.ts --format esm,cjs,iife --dts --clean --global-name Yamp",
         "demo": "cd ./demo && php -S localhost:8001"
     },
-    "name": "yamp",
+    "name": "@theblackswitch/yamp",
     "version": "0.0.5",
     "type": "module",
     "main": "./dist/main.ts",
