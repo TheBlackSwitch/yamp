@@ -27,11 +27,6 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
           package-manager-chache: false
-
-      - name: Setup nmp
-        uses: npm/action-setup@v4
-        with:
-          version: 10
           
       - name: Set package version
         run: |
