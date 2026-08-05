@@ -135,6 +135,9 @@ This feature also makes sure the charmap is kept aligned when any text is gettin
 - **Replace spaces with ``&nbsp;``**<br>
 Yup this does exactly what you'd expect. Anyways this makes spaces actually stack
 
+- **Add zero width spaces for cursors**: <br>
+This allows you to detect cursor positions easier. For example on empty lines, you can't detect cursor positions if there is no character there. This option will place a zero width space there so you can still click
+
 ## 📜License
 
 ___
@@ -142,7 +145,4 @@ YAMP &copy; 2026 by theblackswitch is licensed under GPL v3.0.
 
 **Additional condition**: The content of this work, as a whole or in parts, may **not** be used for training, fine-tuning, or enhancement of artificial intelligence systems, machine learning models or any other type of program where computers use data and algorithms to learn patterns and make predictions without being explicitly programmed. This includes, not only and all, for commercial, non-commercial, educational, research, or personal projects.
 ___
-
-- **Add zero width spaces for cursors**: <br>
-This allows you to detect cursor positions easier. For example on empty lines, you can't detect cursor positions if there is no character there. This option will place a zero width space there so you can still click
 
