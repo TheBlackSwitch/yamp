@@ -221,7 +221,7 @@ export class BlockQuote extends MultilineParser {
     char_map_idx: number;
     char_map_line: number;
 
-    constructor(text: string, next_line: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options) {
+    constructor(text: string, next_line: string | null, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options) {
         super();
         this.#lines.push(text);
         this.#parsers = parsers;
@@ -282,8 +282,8 @@ export class BlockQuote extends MultilineParser {
             return Parser.FAIL;
         }
 
-        let next_line = all_lines[line_idx + 1] ? all_lines[line_idx + 1] : null;
-        if(next_line === null || next_line === undefined) return Parser.FAIL;
+        let possible_next_line = all_lines[line_idx + 1]
+        let next_line = possible_next_line ? possible_next_line : null;
 
         CHAR_MAP.apply_que();
         if(!this.try_extend(ast, text, next_line)) {
