@@ -88,7 +88,7 @@ export class StringHelper {
         return string.slice(0, start_pos) + insert + string.slice(start_pos + length);
     }
 
-    static turn_into_acii(input: string): string {
+    static turn_into_ascii(input: string): string {
         let out = "";
         for(let i = 0; i < input.length; i++) {
             let c = input.charAt(i);

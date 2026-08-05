@@ -4,7 +4,7 @@
         "tsup": "^8.5.1"
     },
     "scripts": {
-        "build": "npx tsup src/main.ts --format esm,cjs,iife --dts --clean --global-name Yamp",
+        "build": "npx tsup src/main.ts --format esm,cjs,iife --dts --clean --global-name YAMP",
         "demo": "cd ./demo && php -S localhost:8001"
     },
     "name": "@theblackswitch/yamp",

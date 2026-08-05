@@ -23,7 +23,7 @@ export abstract class Parser {
 
     static init() {} // Runs once before the parsing starts. Can be used to init static variables for example
 
-    static PRIORITY = 10; // Use this modifier to handle the order in which syntax is parsed. Higher numbers get parsed ealier
+    static PRIORITY = 10; // Use this modifier to handle the order in which syntax is parsed. Higher numbers get parsed earlier
 
     line_idx = 0; // Used internally for chaching
 
@@ -72,10 +72,6 @@ export class InlineParser extends Parser {
     static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): Array<InlineModifer> {  // Process a single line and return a list of modifiers
         return [];
     }
-
-    apply(input: string): string {
-        return input;
-    }
 }
 
 export class InlineModifer {
@@ -109,8 +105,6 @@ export class InlineModifer {
     apply(line: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number): string {
         if(this.#data.type === "insert") {
             line = StringHelper.insert_substring(line, this.#index, 0, this.#data.value);
-
-            
 
         } else if(this.#data.type === "delete") {
 

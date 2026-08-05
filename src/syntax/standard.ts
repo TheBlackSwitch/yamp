@@ -111,7 +111,7 @@ export class Header extends SingleLineParser {
         text = this.escape_text(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers);
 
         CHAR_MAP.apply_que();
-        return new Header(text, StringHelper.turn_into_acii(id), heading_level);
+        return new Header(text, StringHelper.turn_into_ascii(id), heading_level);
     }
 
     static register_escape_chars() {
@@ -193,7 +193,7 @@ export class AlternateHeader extends MultilineParser {
         line = this.escape_text(line, CHAR_MAP, char_map_line, charmap_idx, parsers);
         
         if(success && level > 0) {
-            return new AlternateHeader(line, StringHelper.turn_into_acii(line), level);
+            return new AlternateHeader(line, StringHelper.turn_into_ascii(line), level);
         }
         return Parser.FAIL
     }
