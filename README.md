@@ -114,6 +114,7 @@ Remeber to drink enough [blue|water] otherwise you'll be [#AAFFAA|Sick]!
 - Highlights
 ```md
 This is ^very^ important
+These are escaped: ^^ ^<^ ^^
 ```
 - Underlined
 ```md
