@@ -129,8 +129,8 @@ An array that maps each visible html character to their corresponding markdown c
 Escapes any incomplete html. This includes unclosed tags ``<div``, faulty attributes ``<div class=">``, lost close tags ``</div>``, open tags without close tags ``<div>`` or even faulty html entities ``&copy``<br><br>
 This feature also makes sure the charmap is kept aligned when any text is getting parsed as HTML.
 
-  > [!INFO]
-  > Html currently **cannot** cross multiple lines. I should still fix this but it's a lot of work
+  > [!TIP]
+  > Html currently **cannot** cross multiple lines. I should still fix this but it's a lot of work and isn't really that big of an issue since you can still use html on a single line
 
 
 - **Replace spaces with ``&nbsp;``**<br>
