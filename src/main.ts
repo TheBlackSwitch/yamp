@@ -39,7 +39,7 @@ This software is provided as is, without any warranty or responsability.
 import { Header, Emphasis, BlockQuote, AlternateHeader, UnderscoreEmphasis, List, Code, Link, Image, HorizontalRule, Paragraph } from "./syntax/standard"
 import { Strikethrough, CodeBlock, Table } from "./syntax/extended"
 import { EscapeIncompleteHtml } from "./syntax/finalize"
-import { InlineParser, Parser } from "./parser"
+import { Parser } from "./parser"
 import type { ast, ast_node, options, parsers, width_map } from "./public_types"
 import { CharMap, IsTypeOf } from "./utils"
 import type { cache_entry, cached, parser_extend } from "./types"
@@ -385,11 +385,6 @@ function verify_options(options: options) {
     // ======= Paragrpahs =======
     if(options.disable_paragraph_elements !== true && options.disable_paragraph_elements !== false) {
         throw new Error("[Markdown]: failed to parse, invalid options! Field \'disable_paragraph_elements\' must be of type boolean");
-    }
-
-    // ======= Blockquotes =======
-    if( options.blockquote_intendation !== true && options.blockquote_intendation !== false) {
-        throw new Error("[Markdown]: failed to parse, invalid options! Field \'blockquote_intendation\' must be of type boolean");
     }
 
     // ======= General =======

@@ -8,8 +8,6 @@ import { InlineModifer, InlineParser, MultilineParser, Parser } from "../parser"
 import type { ast, options, parsers } from "../public_types";
 import { StringHelper, type CharMap } from "../utils";
 
-
-
 // ==========================================================================================================================================
 // ------------------------------------------------------------------------------------------------------------------------------------------
 //                                                           EXTENDED SYNTAX                                                                       

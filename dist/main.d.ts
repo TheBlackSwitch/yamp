@@ -55,7 +55,7 @@ declare class StringHelper {
     static is_text_char(c: string): boolean;
     static is_number(c: string): boolean;
     static insert_substring(string: string, start_pos: number, length: number, insert: string): string;
-    static turn_into_acii(input: string): string;
+    static turn_into_ascii(input: string): string;
 }
 declare class CharMap {
     width_map: number[][];
@@ -89,7 +89,6 @@ declare abstract class Parser {
 }
 declare class InlineParser extends Parser {
     static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): Array<InlineModifer>;
-    apply(input: string): string;
 }
 declare class InlineModifer {
     #private;
@@ -186,7 +185,7 @@ declare class BlockQuote extends MultilineParser {
     CHAR_MAP: CharMap;
     char_map_idx: number;
     char_map_line: number;
-    constructor(text: string, next_line: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options);
+    constructor(text: string, next_line: string | null, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options);
     extend(text: string, next_line: string): boolean;
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): 0 | BlockQuote | 1;
     static check_ast_parsing(ast: ast): void;
@@ -276,6 +275,19 @@ declare class EscapeIncompleteHtml extends InlineParser {
     static register_escape_chars(): string;
 }
 
+declare class Color extends InlineParser {
+    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): InlineModifer[];
+    static register_escape_chars(): string;
+}
+declare class Highlight extends InlineParser {
+    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): InlineModifer[];
+    static register_escape_chars(): string;
+}
+declare class Underlined extends InlineParser {
+    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): InlineModifer[];
+    static register_escape_chars(): string;
+}
+
 declare const default_options: options;
 declare function set_options(options: options): void;
 declare function parse(text: string): {
@@ -283,4 +295,4 @@ declare function parse(text: string): {
     char_map: absolute_map;
 };
 
-export { AlternateHeader, BlockQuote, CharMap, Code, CodeBlock, Emphasis, EscapeIncompleteHtml, Header, HorizontalRule, Image, InlineModifer, InlineParser, IsTypeOf, Link, List, MultilineParser, Paragraph, Parser, SingleLineParser, Strikethrough, StringHelper, Table, UnderscoreEmphasis, default_options, parse, set_options };
+export { AlternateHeader, BlockQuote, CharMap, Code, CodeBlock, Color, Emphasis, EscapeIncompleteHtml, Header, Highlight, HorizontalRule, Image, InlineModifer, InlineParser, IsTypeOf, Link, List, MultilineParser, Paragraph, Parser, SingleLineParser, Strikethrough, StringHelper, Table, Underlined, UnderscoreEmphasis, default_options, parse, set_options };

@@ -1,5 +1,5 @@
 "use strict";
-var Yamp = (() => {
+var YAMP = (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
   var __getOwnPropNames = Object.getOwnPropertyNames;
@@ -26,9 +26,11 @@ var Yamp = (() => {
     CharMap: () => CharMap,
     Code: () => Code,
     CodeBlock: () => CodeBlock,
+    Color: () => Color,
     Emphasis: () => Emphasis,
     EscapeIncompleteHtml: () => EscapeIncompleteHtml,
     Header: () => Header,
+    Highlight: () => Highlight,
     HorizontalRule: () => HorizontalRule,
     Image: () => Image,
     InlineModifer: () => InlineModifer,
@@ -43,6 +45,7 @@ var Yamp = (() => {
     Strikethrough: () => Strikethrough,
     StringHelper: () => StringHelper,
     Table: () => Table,
+    Underlined: () => Underlined,
     UnderscoreEmphasis: () => UnderscoreEmphasis,
     default_options: () => default_options,
     parse: () => parse,
@@ -105,7 +108,7 @@ var Yamp = (() => {
     static insert_substring(string, start_pos, length, insert) {
       return string.slice(0, start_pos) + insert + string.slice(start_pos + length);
     }
-    static turn_into_acii(input) {
+    static turn_into_ascii(input) {
       let out = "";
       for (let i = 0; i < input.length; i++) {
         let c = input.charAt(i);
@@ -234,7 +237,7 @@ var Yamp = (() => {
     }
     // Runs once before the parsing starts. Can be used to init static variables for example
     static PRIORITY = 10;
-    // Use this modifier to handle the order in which syntax is parsed. Higher numbers get parsed ealier
+    // Use this modifier to handle the order in which syntax is parsed. Higher numbers get parsed earlier
     line_idx = 0;
     // Used internally for chaching
     static register_escape_chars() {
@@ -267,9 +270,6 @@ var Yamp = (() => {
   var InlineParser = class extends Parser {
     static parse(input, CHAR_MAP, char_map_line, char_map_idx, options) {
       return [];
-    }
-    apply(input) {
-      return input;
     }
   };
   var InlineModifer = class _InlineModifer {
@@ -433,7 +433,7 @@ var Yamp = (() => {
       text = this.parse_inline(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
       text = this.escape_text(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers);
       CHAR_MAP.apply_que();
-      return new _Header(text, StringHelper.turn_into_acii(id), heading_level);
+      return new _Header(text, StringHelper.turn_into_ascii(id), heading_level);
     }
     static register_escape_chars() {
       return "#";
@@ -490,7 +490,7 @@ var Yamp = (() => {
       line = this.parse_inline(line, CHAR_MAP, char_map_line, charmap_idx, parsers, options);
       line = this.escape_text(line, CHAR_MAP, char_map_line, charmap_idx, parsers);
       if (success && level > 0) {
-        return new _AlternateHeader(line, StringHelper.turn_into_acii(line), level);
+        return new _AlternateHeader(line, StringHelper.turn_into_ascii(line), level);
       }
       return Parser.FAIL;
     }
@@ -558,8 +558,8 @@ var Yamp = (() => {
         this.check_ast_parsing(ast);
         return Parser.FAIL;
       }
-      let next_line = all_lines[line_idx + 1] ? all_lines[line_idx + 1] : null;
-      if (next_line === null || next_line === void 0) return Parser.FAIL;
+      let possible_next_line = all_lines[line_idx + 1];
+      let next_line = possible_next_line ? possible_next_line : null;
       CHAR_MAP.apply_que();
       if (!this.try_extend(ast, text, next_line)) {
         return new _BlockQuote(text, next_line, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
@@ -1522,6 +1522,133 @@ var Yamp = (() => {
     }
   };
 
+  // src/syntax/infill.ts
+  var Color = class extends InlineParser {
+    static parse(input, CHAR_MAP, char_map_line, char_map_idx, options) {
+      if (!input.includes("]") || !input.includes("[") || !input.includes("|")) return [];
+      let modifiers = [];
+      let color_start = 0;
+      let color_opened = false;
+      let color_done = false;
+      let color_end = 0;
+      for (let i = 0; i < input.length; i++) {
+        let char = input.charAt(i);
+        if (char === "[") {
+          color_start = i;
+          color_opened = true;
+        } else if (char === "|" && color_opened) {
+          color_end = i;
+          color_done = true;
+        } else if (char === "]" && color_done && color_opened) {
+          let color_part = input.slice(color_start + 1, color_end);
+          modifiers.push(InlineModifer.new_replace(color_start, color_end - color_start + 1, `<span style="color: ${color_part};">`, true));
+          modifiers.push(InlineModifer.new_replace(i, 1, "</span>", true));
+        } else if (color_opened && !color_done && !StringHelper.is_text_char(char) && char !== "#") {
+          color_opened = false;
+        }
+      }
+      return modifiers;
+    }
+    static register_escape_chars() {
+      return "[|]";
+    }
+  };
+  var Highlight = class extends InlineParser {
+    static parse(input, CHAR_MAP, char_map_line, char_map_idx, options) {
+      if (!input.includes("^")) return [];
+      let backticks = [];
+      let count = 0;
+      let modifiers = [];
+      for (let i = 0; i < input.length; i++) {
+        if (input.charAt(i) === "^" && input.charAt(i - 1) !== "\\") {
+          let start = i;
+          i++;
+          count = 1;
+          while (input.charAt(i) === "^") {
+            count++;
+            i++;
+            if (count >= 3) continue;
+          }
+          backticks.push({
+            "count": count,
+            "start": start
+          });
+        }
+      }
+      if (backticks.length === 0) return [];
+      for (let i = 0; i < backticks.length; i++) {
+        let backtick = backticks[i];
+        if (!backtick) continue;
+        let success = false;
+        for (let si = i + 1; si < backticks.length; si++) {
+          let ending = backticks[si];
+          if (!ending) continue;
+          if (ending.count === backtick.count) {
+            if (backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + ending.start + 1, backtick.count - 1);
+            if (backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + backtick.start + backtick.count - 1, backtick.count - 1);
+            modifiers.push(InlineModifer.new_replace(ending.start, backtick.count, "</mark>\u200B"));
+            modifiers.push(InlineModifer.new_replace(backtick.start, backtick.count, "<mark>\u200B"));
+            i = si;
+            success = true;
+            break;
+          }
+        }
+        if (success) continue;
+      }
+      return modifiers;
+    }
+    static register_escape_chars() {
+      return "^";
+    }
+  };
+  var Underlined = class extends InlineParser {
+    static parse(input, CHAR_MAP, char_map_line, char_map_idx, options) {
+      if (!input.includes("=")) return [];
+      let equal_signs = [];
+      let count = 0;
+      let modifiers = [];
+      for (let i = 0; i < input.length; i++) {
+        if (input.charAt(i) === "=") {
+          let start = i;
+          i++;
+          count = 1;
+          while (input.charAt(i) === "=") {
+            count++;
+            i++;
+            if (count >= 3) continue;
+          }
+          if (count !== 2) continue;
+          equal_signs.push({
+            "count": count,
+            "start": start
+          });
+        }
+      }
+      if (equal_signs.length === 0) return [];
+      for (let i = 0; i < equal_signs.length; i++) {
+        let squiggle = equal_signs[i];
+        if (!squiggle) continue;
+        let success = false;
+        for (let si = i + 1; si < equal_signs.length; si++) {
+          let ending = equal_signs[si];
+          if (!ending) continue;
+          if (ending.count === squiggle.count) {
+            modifiers.push(InlineModifer.new_replace(ending.start, squiggle.count, "</u>", true));
+            modifiers.push(InlineModifer.new_replace(squiggle.start, squiggle.count, "<u>", true));
+            i = si;
+            success = true;
+            break;
+          }
+        }
+        if (success) continue;
+      }
+      return modifiers;
+    }
+    static register_escape_chars() {
+      return "=";
+    }
+  };
+
   // src/main.ts
   var default_options = {
     "enabled_features": [
@@ -1544,8 +1671,6 @@ var Yamp = (() => {
     ],
     "disable_paragraph_elements": false,
     // Parse paragraphs without adding the <p> elements
-    "blockquote_intendation": false,
-    // Apply intendation to block quotes
     "literal_mid_word_underscores": true,
     // Make sure words like hello_world_stuff stay literal and don't become italic
     "add_zero_width_space_for_cursor_positions": true,
@@ -1754,9 +1879,6 @@ var Yamp = (() => {
     }
     if (options.disable_paragraph_elements !== true && options.disable_paragraph_elements !== false) {
       throw new Error("[Markdown]: failed to parse, invalid options! Field 'disable_paragraph_elements' must be of type boolean");
-    }
-    if (options.blockquote_intendation !== true && options.blockquote_intendation !== false) {
-      throw new Error("[Markdown]: failed to parse, invalid options! Field 'blockquote_intendation' must be of type boolean");
     }
     if (options.add_zero_width_space_for_cursor_positions !== true && options.add_zero_width_space_for_cursor_positions !== false) {
       throw new Error("[Markdown]: failed to parse, invalid options! Field 'add_zero_width_space_for_cursor_positions' must be of type boolean");

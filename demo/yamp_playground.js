@@ -68,6 +68,9 @@ function update_render() {
     if(options && options.enabled_features && options.enabled_features.includes('Image')) real_options.enabled_features.push(Markdown.Image);
     if(options && options.enabled_features && options.enabled_features.includes('HorizontalRule')) real_options.enabled_features.push(Markdown.HorizontalRule);
     if(options && options.enabled_features && options.enabled_features.includes('Table')) real_options.enabled_features.push(Markdown.Table);
+    if(options && options.enabled_features && options.enabled_features.includes('Color')) real_options.enabled_features.push(Markdown.Color);
+    if(options && options.enabled_features && options.enabled_features.includes('Highlight')) real_options.enabled_features.push(Markdown.Highlight);
+    if(options && options.enabled_features && options.enabled_features.includes('Underlined')) real_options.enabled_features.push(Markdown.Underlined);
     
     if(options && options.enabled_features && options.enabled_features.includes('EscapeIncompleteHtml')) real_options.enabled_features.push(Markdown.EscapeIncompleteHtml);
 
