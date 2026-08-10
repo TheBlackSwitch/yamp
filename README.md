@@ -4,9 +4,9 @@
 ## Introduction
 YAMP is a lightweight markdown parser focused on live in-text parsing. It's designed for [Infill](https://github.com/TheBlackSwitch/infill) a live in-text mardown editor. 
 
-It comes with all basic markdown syntax plus built-in char map generation which maps each character in the visible html an traces it back to the original markdown.
+It comes with all basic markdown syntax plus built-in char map generation which maps each character in the visible html and traces it back to the original markdown.
 
-Since it's designed for in-text parsing, the parser **doesn't** closely follow the CommonMark specifications as they aren't always intuitive for an in-text editor. Most of these are full intended to make writing easier for the user.
+Since it's designed for in-text parsing, the parser **doesn't** closely follow the CommonMark specifications as they aren't always intuitive for an in-text editor. Most of these are fully intended to improve the end-user experience.
 
 ## Table of contents
 - [Design](#design)
