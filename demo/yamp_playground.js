@@ -23,13 +23,11 @@ options_elem.addEventListener('input', () => update_options());
 
 input_elem.addEventListener('scroll', () => {
     let scroll_percentage = input_elem.scrollTop / (input_elem.scrollHeight - input_elem.clientHeight);
-    console.log(scroll_percentage);
     markdown_output.scrollTo({"top": (markdown_output.scrollHeight - markdown_output.clientHeight) * scroll_percentage});
 })
 
 markdown_output.addEventListener('scroll', () => {
     let scroll_percentage = markdown_output.scrollTop / (markdown_output.scrollHeight - markdown_output.clientHeight);
-    console.log(scroll_percentage);
     input_elem.scrollTo({"top": (input_elem.scrollHeight - input_elem.clientHeight) * scroll_percentage});
 })
 
@@ -49,6 +47,7 @@ function update_options() {
         "add_zero_width_space_for_cursor_positions": options.add_zero_width_space_for_cursor_positions,
         "enable_trailing_line_breaks": options.enable_trailing_line_breaks,
         "finalize_spaces": options.finalize_spaces,
+        "debug": options.debug,
         "enabled_features": []
     };
 
@@ -89,7 +88,6 @@ function update_render() {
     markdown_output.innerHTML = result.html;
     charmap_output.innerHTML = `Width: ${result.char_map.width_map}<br>Absolute: ${result.char_map.absolute_map}`;
     char_map = result.char_map.absolute_map;
-    console.log(result.html);
 
     benchmark_results.textContent = `Parsing took: ${end - start}µs`;
     Prism.highlightAllUnder(markdown_output);
@@ -139,10 +137,10 @@ markdown_output.addEventListener('click', (e) => {
     
     if(carr_pos === null) return console.warn('Whoops failed to get carret position!');
 
-    console.log(carr_pos.global);
-
     let index = char_map[carr_pos.global];
 
+    input_elem.selectionStart = index;
+    input_elem.selectionEnd = index;
     input_elem.focus()
     input_elem.selectionStart = index;
     input_elem.selectionEnd = index;

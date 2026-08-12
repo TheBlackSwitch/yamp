@@ -1,13 +1,9 @@
-First actual update kinda.
-
-This fixes many bugs while making multiline parsing with integrated AST a lot easier.
+Please just work :(
 
 # Changelog
 ### New features
-- new finish() method for the MultilineParser, it will fire once the node can't be extended anymore
-- new static parse_ast() method for the MultilineParser which will parse a set of lines into an AST
+- Added the "debug" option which will output debugging info to the console when parsing
 
 ### Bug fixes
-- Block quotes didn't parse propperly when a node with higher priority generated first.
-- Block quotes didn't parse propperly when no next line was present
-- Fixed an issue where multiline nodes didn't get re-parsed when a line behind it changed
+- A very weird and obscure bug with caching causing some parts of the markdown file to dissapear
+- Fixed the naming inside some debug messages

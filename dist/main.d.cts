@@ -155,6 +155,7 @@ interface options {
     literal_mid_word_underscores?: boolean,
     add_zero_width_space_for_cursor_positions?: boolean,
     finalize_spaces?: boolean,
+    debug?: boolean,
 
     [key: string]: any;
 }

@@ -1635,8 +1635,10 @@ var default_options = {
   // Insert zero-width-spaces to differenciate between before and after styling. Useful for carret positions
   "enable_trailing_linebreaks": true,
   // Put a linebreak at the end of every line, even <h1>text<br></h1>. This is also useful for carret position
-  "finalize_spaces": true
+  "finalize_spaces": true,
   // Determines wheter spaces will be replaced with &nbsp; so they always show a difference
+  "debug": false
+  // Enable any debug logging to the console
 };
 var final_options;
 var parsers_sorted;
@@ -1655,19 +1657,22 @@ function set_options(options) {
   clear_cache();
 }
 function parse(text) {
-  console.log("CACHE", structuredClone(cache));
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   if (!final_options) set_options(default_options);
-  console.log("CACHE", structuredClone(cache));
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   let lines = parse_to_lines(text);
-  console.log("CACHE", structuredClone(cache));
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   let cached = parse_cache(lines, final_options);
-  console.log("CACHED:", cached);
+  if (final_options?.debug) console.log("CACHED:", cached);
+  if (final_options?.debug) console.log("CACHE BEFORE CHARMAP", structuredClone(cache));
   let CHAR_MAP = CharMap.from_cache(lines, cached);
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   const ast = gen_ast(lines, cached, CHAR_MAP, parsers_sorted, final_options);
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   const html = process_ast(ast, cached, CHAR_MAP, parsers_sorted, final_options);
-  console.log("AST:", ast);
+  if (final_options?.debug) console.log("AST:", ast);
   cache_char_map(CHAR_MAP);
-  console.log("CACHE", structuredClone(cache));
+  if (final_options?.debug) console.log("CACHE", structuredClone(cache));
   return {
     "html": html,
     "char_map": CHAR_MAP.absolute_map()
@@ -1714,8 +1719,8 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
     }
     if (parsed !== Parser.EXTEND) {
       if (last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
-        console.log(last_ast_node);
-        console.log(parsed);
+        if (final_options?.debug) console.log(last_ast_node);
+        if (final_options?.debug) console.log(parsed);
         last_ast_node.finish();
       }
       last_ast_node = parsed;
@@ -1785,7 +1790,7 @@ function parse_cache(lines, options) {
       }
       if (prev_node_idx >= 0) {
         let line_idx = prev_node_idx;
-        console.log(line_idx, i);
+        if (final_options?.debug) console.log(line_idx, i);
         while (entry && entry.type === "extend" || line_idx < i) {
           output[line_idx] = { "type": "parse_again" };
           char_map[line_idx] = null;
@@ -1793,12 +1798,14 @@ function parse_cache(lines, options) {
           entry = cache.entries[line_idx];
         }
         entry = cache.entries[i];
-        console.log(line_idx, i);
+        if (final_options?.debug) console.log(line_idx, i);
       }
     }
     if (entry && entry.type === "node") prev_node_idx = i;
   }
-  if (cache.entries.length < lines.length) cache.entries = new Array(lines.length);
+  while (cache.entries.length < lines.length) {
+    cache.entries.push({ "type": "parse_again" });
+  }
   return {
     "entries": output,
     "char_map": char_map
@@ -1806,6 +1813,7 @@ function parse_cache(lines, options) {
 }
 var last_node_idx = 0;
 function cache_ast_node(line_idx, input, parsed) {
+  if (final_options?.debug) console.log("APPLY", line_idx, input, parsed);
   if (parsed === Parser.EXTEND && cache && cache.entries.length > 0) {
     let last_node = cache.entries[last_node_idx];
     if (last_node && last_node.type === "node") last_node.line_count = last_node.line_count ? last_node.line_count + 1 : 1;
@@ -1824,7 +1832,7 @@ function cache_ast_node(line_idx, input, parsed) {
 }
 function cache_output(line_idx, output) {
   let entry = cache.entries[line_idx];
-  if (!entry || entry.type !== "node") return console.warn("Whoops an extend line somehow got a corresponding output.");
+  if (!entry || entry.type !== "node") return console.warn("[YAMP]: Whoops an extend line somehow got a corresponding output. Please report this as an issue.");
   entry.output = output;
 }
 function cache_char_map(char_map) {
@@ -1853,22 +1861,25 @@ function finalize_spaces(input) {
 }
 function verify_options(options) {
   if (!(options.enabled_features instanceof Array)) {
-    throw new Error("[Markdown]: failed to parse, invalid options! Field 'enabled_features' must be of type array");
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'enabled_features' must be of type array");
   }
   for (const parser of options.enabled_features) {
-    if (!(parser.prototype instanceof Parser)) throw Error(`[Markdown]: Parser entries must be instance of Parser but found: ${parser}`);
+    if (!(parser.prototype instanceof Parser)) throw Error(`[YAMP]: Parser entries must be instance of Parser but found: ${parser}`);
   }
   if (options.disable_paragraph_elements !== true && options.disable_paragraph_elements !== false) {
-    throw new Error("[Markdown]: failed to parse, invalid options! Field 'disable_paragraph_elements' must be of type boolean");
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'disable_paragraph_elements' must be of type boolean");
   }
   if (options.add_zero_width_space_for_cursor_positions !== true && options.add_zero_width_space_for_cursor_positions !== false) {
-    throw new Error("[Markdown]: failed to parse, invalid options! Field 'add_zero_width_space_for_cursor_positions' must be of type boolean");
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'add_zero_width_space_for_cursor_positions' must be of type boolean");
   }
   if (options.enable_trailing_linebreaks !== true && options.enable_trailing_linebreaks !== false) {
-    throw new Error("[Markdown]: failed to parse, invalid options! Field 'enable_trailing_linebreaks' must be of type boolean");
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'enable_trailing_linebreaks' must be of type boolean");
   }
   if (options.finalize_spaces !== true && options.finalize_spaces !== false) {
-    throw new Error("[Markdown]: failed to parse, invalid options! Field 'finalize_spaces' must be of type boolean");
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'finalize_spaces' must be of type boolean");
+  }
+  if (options.debug !== true && options.debug !== false) {
+    throw new Error("[YAMP]: failed to parse, invalid options! Field 'debug' must be of type boolean");
   }
 }
 export {
