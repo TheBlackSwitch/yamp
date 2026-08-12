@@ -18,7 +18,7 @@ let char_map = [];
 update_render()
 
 input_elem.addEventListener('input', () => update_render());
-options_elem.addEventListener('input', () => update_render());
+options_elem.addEventListener('input', () => update_options());
 
 
 input_elem.addEventListener('scroll', () => {
@@ -34,10 +34,7 @@ markdown_output.addEventListener('scroll', () => {
 })
 
 
-function update_render() {
-    localStorage.setItem('yamp_playground_options', options_elem.value);
-    localStorage.setItem('yamp_playground_text', input_elem.value);
-
+function update_options() {
     let options = {};
     try {
         options = JSON.parse(options_elem.value);
@@ -76,8 +73,12 @@ function update_render() {
 
     Markdown.set_options(real_options);
 
-    console.log(Markdown.Link)
+    update_render();
+}
 
+function update_render() {
+    localStorage.setItem('yamp_playground_options', options_elem.value);
+    localStorage.setItem('yamp_playground_text', input_elem.value);
 
     let start = Math.floor(window.performance.now() * 1000);
 
@@ -147,7 +148,6 @@ markdown_output.addEventListener('click', (e) => {
     input_elem.selectionEnd = index;
     
 })
-
 function get_carret_position_from_point(root_element, x, y) {
 
     let carret_position;

@@ -173,6 +173,8 @@ export class SingleLineParser extends Parser {
 // Syntax that may be spread out over multiple lines but that can be merged into a single ast ast_node
 export class MultilineParser extends SingleLineParser {
 
+    finish() {} // This medthod is called when the next node isn't a the same node and thus this node is closed
+
     static try_extend(ast: ast, ...parameters: any): boolean { // Try to extend the previous ast with parameters returns true if the ast got extended
         if(ast.length === 0) return false;
         let prev_ast_node = ast[ast.length - 1];
@@ -180,6 +182,49 @@ export class MultilineParser extends SingleLineParser {
             return prev_ast_node.extend(...parameters);
         }
         return false;
+    }
+
+    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number> | number, parsers: parsers, options: options) {
+        let ast: ast = [];
+        let last_ast_node: ast_node | null = null;
+
+        let final_char_map_indices: Array<number> = [];
+
+        // Handle the charmap index for each line
+        if(Array.isArray(char_map_indices)) {
+            final_char_map_indices = char_map_indices;
+        } else {
+            final_char_map_indices = new Array(lines.length).fill(char_map_indices);
+        }
+    
+        for(let idx = 0; idx < lines.length; idx++) {
+            let line = lines[idx];
+            if(line === undefined) continue;
+
+            let char_map_idx = final_char_map_indices[idx];
+            if(char_map_idx === undefined) throw Error('[YAMP] Failed to parse AST, provided parameter char_map_indices doesn\'t align with the lines. It\'s to short!');
+            const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options);
+    
+            // Check if the last node should be finished
+            if(idx === lines.length - 1) {
+                if(parsed instanceof MultilineParser) {
+                    parsed.finish();
+                } else if(parsed === Parser.EXTEND && last_ast_node instanceof MultilineParser) {
+                    last_ast_node.finish();
+                }
+            }
+
+            if(parsed !== Parser.EXTEND) {
+                if(last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
+                    last_ast_node.finish();
+                }
+
+                last_ast_node = parsed;
+                ast.push(parsed);
+                parsed.line_idx = idx;
+            }
+        }
+        return ast;
     }
 
     static parse_single_line(line: string, lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, ast: ast, parsers: parsers, options: options, allow_self = false): parser_extend | ast_node {

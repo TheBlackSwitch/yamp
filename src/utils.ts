@@ -6,7 +6,7 @@
 
 import type {cached, char_map_que_entry} from "./types"
 import type {absolute_map, ast_node, cached_ast_node, width_map} from "./public_types"
-import { InlineParser, SingleLineParser, type Parser } from "./parser";
+import { InlineParser, MultilineParser, SingleLineParser, type Parser } from "./parser";
 
 
 // ==========================================================================================================================================
@@ -223,6 +223,10 @@ export class IsTypeOf {
 
     static SingleLineParserClass(parser: typeof Parser): parser is typeof SingleLineParser {
         return parser.prototype instanceof SingleLineParser;
+    }
+
+    static MultilineParserClass(parser: typeof Parser): parser is typeof MultilineParser {
+        return parser.prototype instanceof MultilineParser;
     }
 
     static InlineParserClass(parser: typeof Parser): parser is typeof InlineParser {

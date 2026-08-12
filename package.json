@@ -30,7 +30,23 @@
     "files": [
         "dist"
     ],
+    "author": "theblackswitch",
+    "license": "LGPL-3.0-or-later",
     "publishConfig": {
         "access": "public"
-    }
+    },
+    "description": "YAMP: yet another markdown parser, A lightweight markdown parser specifically designed for live in-text parsing",
+    "keywords": [
+        "markdown",
+        "markdown-parser",
+        "parser",
+        "typescript",
+        "javascript",
+        "html",
+        "ast",
+        "char-map",
+        "character_map",
+        "live",
+        "in-text"
+    ]
 }

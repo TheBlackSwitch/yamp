@@ -39,7 +39,7 @@ This software is provided as is, without any warranty or responsability.
 import { Header, Emphasis, BlockQuote, AlternateHeader, UnderscoreEmphasis, List, Code, Link, Image, HorizontalRule, Paragraph } from "./syntax/standard"
 import { Strikethrough, CodeBlock, Table } from "./syntax/extended"
 import { EscapeIncompleteHtml } from "./syntax/finalize"
-import { Parser } from "./parser"
+import { MultilineParser, Parser } from "./parser"
 import type { ast, ast_node, options, parsers, width_map } from "./public_types"
 import { CharMap, IsTypeOf } from "./utils"
 import type { cache_entry, cached, parser_extend } from "./types"
@@ -107,21 +107,28 @@ export function set_options(options: options) {
 }
 
 export function parse(text: string) {
+    console.log('CACHE', structuredClone(cache));
 
     if(!final_options) set_options(default_options)
+    console.log('CACHE', structuredClone(cache));
 
     let lines = parse_to_lines(text);
+    console.log('CACHE', structuredClone(cache));
 
     // check if we can cache any lines
     let cached = parse_cache(lines, final_options);
+    console.log("CACHED:", cached);
 
     let CHAR_MAP = CharMap.from_cache(lines, cached);
     
 
     const ast = gen_ast(lines, cached, CHAR_MAP, parsers_sorted, final_options);
     const html = process_ast(ast, cached, CHAR_MAP, parsers_sorted, final_options);
+    console.log("AST:", ast);
 
     cache_char_map(CHAR_MAP);
+
+    console.log('CACHE', structuredClone(cache));
 
     return {
         "html": html,
@@ -168,6 +175,8 @@ function gen_ast(lines: Array<string>, cached: cached, CHAR_MAP: CharMap, parser
     }
 
     let ast: ast = [];
+    let last_ast_node: ast_node | null = null;
+
     for(let idx = 0; idx < lines.length; idx++) {
         let line = lines[idx];
         let curr_entry = cached.entries[idx];
@@ -181,7 +190,25 @@ function gen_ast(lines: Array<string>, cached: cached, CHAR_MAP: CharMap, parser
             continue;
         }
         const parsed = parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
+
+        // Check if the last node should be finished
+        
+        if(idx === lines.length - 1) {
+            if(parsed instanceof MultilineParser) {
+                parsed.finish();
+            } else if(parsed === Parser.EXTEND && last_ast_node instanceof MultilineParser) {
+                last_ast_node.finish();
+            }
+        }
+
         if(parsed !== Parser.EXTEND) {
+            if(last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
+                console.log(last_ast_node);
+                console.log(parsed);
+                last_ast_node.finish();
+            }
+
+            last_ast_node = parsed;
             ast.push(parsed);
             parsed.line_idx = idx;
         }
@@ -193,7 +220,7 @@ function gen_ast(lines: Array<string>, cached: cached, CHAR_MAP: CharMap, parser
 function parse_single_line(line: string, CHAR_MAP: CharMap, lines: Array<string>, idx: number, ast: ast, parsers: parsers, options: options) {
     if(parsers.length > 0) {
         for(const parser of parsers) {
-            if(IsTypeOf.SingleLineParserClass(parser)) {
+            if(IsTypeOf.SingleLineParserClass(parser) || IsTypeOf.MultilineParserClass(parser)) {
                 CHAR_MAP.cancel_que();
                 let parsed = parser.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
                 if(parsed === null) throw new Error(`[YAMP]: Failed to build ast, parser ${parser} doesn't implement required method parse()!`);
@@ -261,7 +288,7 @@ function parse_cache(lines: Array<string>, options: options): cached {
     let output: Array<cache_entry> = cache.entries.slice(0, lines.length);
     let char_map: Array<Array<number> | null> = cache.char_map.slice(0, lines.length);
 
-    let prev_node_idx = 0;
+    let prev_node_idx = -1;
 
     for(let i = 0; i < lines.length; i++) {
         if(cache.entries.length <= i)  {
@@ -271,13 +298,19 @@ function parse_cache(lines: Array<string>, options: options): cached {
 
         let entry = cache.entries[i];
 
-        if(entry && entry.type === "node") prev_node_idx = i;
-
         if(!(entry && entry.type !== "parse_again" && entry.input && lines[i] === entry.input)) {
 
-            if(entry && entry.type === "extend") {
+            if(!entry || entry.type !== "extend") {
+                output[i] = {"type": "parse_again"};
+                char_map[i] = null;
+            }
+
+            // Reparse all lines that are part of the multiline or the previous node
+            if(prev_node_idx >= 0) {
                 let line_idx = prev_node_idx;
 
+                console.log(line_idx, i);
+                
                 while(entry && entry.type === "extend" || line_idx < i) {
                     output[line_idx] = {"type": "parse_again"};
                     char_map[line_idx] = null;
@@ -285,13 +318,13 @@ function parse_cache(lines: Array<string>, options: options): cached {
                     line_idx++;
                     entry = cache.entries[line_idx];
                 }
-                i = line_idx -1;
-            } else {
-                output[i] = {"type": "parse_again"};
-                char_map[i] = null;
+                entry = cache.entries[i];
+                console.log(line_idx, i);
             }
 
         }
+
+        if(entry && entry.type === "node") prev_node_idx = i;
     }
 
     if(cache.entries.length < lines.length) cache.entries = new Array(lines.length);

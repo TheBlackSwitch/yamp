@@ -217,6 +217,9 @@ var IsTypeOf = class {
   static SingleLineParserClass(parser) {
     return parser.prototype instanceof SingleLineParser;
   }
+  static MultilineParserClass(parser) {
+    return parser.prototype instanceof MultilineParser;
+  }
   static InlineParserClass(parser) {
     return parser.prototype instanceof InlineParser;
   }
@@ -339,7 +342,10 @@ var SingleLineParser = class extends Parser {
     return null;
   }
 };
-var MultilineParser = class extends SingleLineParser {
+var MultilineParser = class _MultilineParser extends SingleLineParser {
+  finish() {
+  }
+  // This medthod is called when the next node isn't a the same node and thus this node is closed
   static try_extend(ast, ...parameters) {
     if (ast.length === 0) return false;
     let prev_ast_node = ast[ast.length - 1];
@@ -347,6 +353,39 @@ var MultilineParser = class extends SingleLineParser {
       return prev_ast_node.extend(...parameters);
     }
     return false;
+  }
+  static parse_ast(lines, CHAR_MAP, char_map_line, char_map_indices, parsers, options) {
+    let ast = [];
+    let last_ast_node = null;
+    let final_char_map_indices = [];
+    if (Array.isArray(char_map_indices)) {
+      final_char_map_indices = char_map_indices;
+    } else {
+      final_char_map_indices = new Array(lines.length).fill(char_map_indices);
+    }
+    for (let idx = 0; idx < lines.length; idx++) {
+      let line = lines[idx];
+      if (line === void 0) continue;
+      let char_map_idx = final_char_map_indices[idx];
+      if (char_map_idx === void 0) throw Error("[YAMP] Failed to parse AST, provided parameter char_map_indices doesn't align with the lines. It's to short!");
+      const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options);
+      if (idx === lines.length - 1) {
+        if (parsed instanceof _MultilineParser) {
+          parsed.finish();
+        } else if (parsed === Parser.EXTEND && last_ast_node instanceof _MultilineParser) {
+          last_ast_node.finish();
+        }
+      }
+      if (parsed !== Parser.EXTEND) {
+        if (last_ast_node !== null && last_ast_node instanceof _MultilineParser && last_ast_node.constructor !== parsed.constructor) {
+          last_ast_node.finish();
+        }
+        last_ast_node = parsed;
+        ast.push(parsed);
+        parsed.line_idx = idx;
+      }
+    }
+    return ast;
   }
   static parse_single_line(line, lines, line_idx, CHAR_MAP, char_map_line, char_map_idx, ast, parsers, options, allow_self = false) {
     if (parsers.length > 0) {
@@ -509,7 +548,7 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
   CHAR_MAP;
   char_map_idx;
   char_map_line;
-  constructor(text, next_line, CHAR_MAP, char_map_line, char_map_idx, parsers, options) {
+  constructor(text, CHAR_MAP, char_map_line, char_map_idx, parsers, options) {
     super();
     this.#lines.push(text);
     this.#parsers = parsers;
@@ -517,16 +556,16 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
     this.CHAR_MAP = CHAR_MAP;
     this.char_map_idx = char_map_idx;
     this.char_map_line = char_map_line;
-    if (next_line === null) this.parse_ast();
   }
-  extend(text, next_line) {
+  extend(text) {
     this.#lines.push(text);
-    if (next_line === null) this.parse_ast();
     return true;
+  }
+  finish() {
+    this.#ast = _BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_idx, this.#parsers, this.#options);
   }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
     if (line.length === 0 || !line.includes(">")) {
-      this.check_ast_parsing(ast);
       return Parser.FAIL;
     }
     let start_idx = 0;
@@ -534,7 +573,6 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
       start_idx++;
     }
     if (line.charAt(start_idx) !== ">") {
-      this.check_ast_parsing(ast);
       return Parser.FAIL;
     }
     let blockquote_depth = 1;
@@ -544,7 +582,6 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
       char = line.charAt(blockquote_depth + start_idx);
     }
     if (blockquote_depth === 0 || char !== " ") {
-      this.check_ast_parsing(ast);
       return Parser.FAIL;
     }
     let new_charmap_idx = start_idx + 1 + charmap_idx;
@@ -555,38 +592,19 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
       new_charmap_idx++;
     }
     if (text.length === 0) {
-      this.check_ast_parsing(ast);
       return Parser.FAIL;
     }
-    let possible_next_line = all_lines[line_idx + 1];
-    let next_line = possible_next_line ? possible_next_line : null;
     CHAR_MAP.apply_que();
-    if (!this.try_extend(ast, text, next_line)) {
-      return new _BlockQuote(text, next_line, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
+    if (!this.try_extend(ast, text)) {
+      return new _BlockQuote(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
     }
     return Parser.EXTEND;
-  }
-  // Check if the previous ast_node is a block quote and start parsing it's ast because this is their last line
-  static check_ast_parsing(ast) {
-    let prev_ast_node = ast[ast.length - 1];
-    if (prev_ast_node instanceof _BlockQuote) {
-      prev_ast_node.parse_ast();
-    }
-  }
-  // Handle ast generation here since we might not have all lines available whilst parsing a single line
-  parse_ast() {
-    this.#ast = [];
-    for (const [idx, line] of this.#lines.entries()) {
-      let ast_ast_node = _BlockQuote.parse_single_line(line, this.#lines, idx, this.CHAR_MAP, this.char_map_line + idx, this.char_map_idx, this.#ast, this.#parsers, this.#options, true);
-      if (ast_ast_node !== Parser.EXTEND) {
-        this.#ast.push(ast_ast_node);
-      }
-    }
   }
   static register_escape_chars() {
     return ">";
   }
   generate(options) {
+    console.log("BLOCK QUOTE AST:", this.#ast);
     let out = "<blockquote>";
     for (const ast_ast_node of this.#ast) {
       if (IsTypeOf.cachedAstNode(ast_ast_node)) continue;
@@ -1697,13 +1715,19 @@ function set_options(options) {
   clear_cache();
 }
 function parse(text) {
+  console.log("CACHE", structuredClone(cache));
   if (!final_options) set_options(default_options);
+  console.log("CACHE", structuredClone(cache));
   let lines = parse_to_lines(text);
+  console.log("CACHE", structuredClone(cache));
   let cached = parse_cache(lines, final_options);
+  console.log("CACHED:", cached);
   let CHAR_MAP = CharMap.from_cache(lines, cached);
   const ast = gen_ast(lines, cached, CHAR_MAP, parsers_sorted, final_options);
   const html = process_ast(ast, cached, CHAR_MAP, parsers_sorted, final_options);
+  console.log("AST:", ast);
   cache_char_map(CHAR_MAP);
+  console.log("CACHE", structuredClone(cache));
   return {
     "html": html,
     "char_map": CHAR_MAP.absolute_map()
@@ -1729,6 +1753,7 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
     parser.init();
   }
   let ast = [];
+  let last_ast_node = null;
   for (let idx = 0; idx < lines.length; idx++) {
     let line = lines[idx];
     let curr_entry = cached.entries[idx];
@@ -1740,7 +1765,20 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
       continue;
     }
     const parsed = parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
+    if (idx === lines.length - 1) {
+      if (parsed instanceof MultilineParser) {
+        parsed.finish();
+      } else if (parsed === Parser.EXTEND && last_ast_node instanceof MultilineParser) {
+        last_ast_node.finish();
+      }
+    }
     if (parsed !== Parser.EXTEND) {
+      if (last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
+        console.log(last_ast_node);
+        console.log(parsed);
+        last_ast_node.finish();
+      }
+      last_ast_node = parsed;
       ast.push(parsed);
       parsed.line_idx = idx;
     }
@@ -1751,7 +1789,7 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
 function parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options) {
   if (parsers.length > 0) {
     for (const parser of parsers) {
-      if (IsTypeOf.SingleLineParserClass(parser)) {
+      if (IsTypeOf.SingleLineParserClass(parser) || IsTypeOf.MultilineParserClass(parser)) {
         CHAR_MAP.cancel_que();
         let parsed = parser.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
         if (parsed === null) throw new Error(`[YAMP]: Failed to build ast, parser ${parser} doesn't implement required method parse()!`);
@@ -1793,29 +1831,32 @@ function clear_cache() {
 function parse_cache(lines, options) {
   let output = cache.entries.slice(0, lines.length);
   let char_map = cache.char_map.slice(0, lines.length);
-  let prev_node_idx = 0;
+  let prev_node_idx = -1;
   for (let i = 0; i < lines.length; i++) {
     if (cache.entries.length <= i) {
       output[i] = { "type": "parse_again" };
       char_map[i] = null;
     }
     let entry = cache.entries[i];
-    if (entry && entry.type === "node") prev_node_idx = i;
     if (!(entry && entry.type !== "parse_again" && entry.input && lines[i] === entry.input)) {
-      if (entry && entry.type === "extend") {
+      if (!entry || entry.type !== "extend") {
+        output[i] = { "type": "parse_again" };
+        char_map[i] = null;
+      }
+      if (prev_node_idx >= 0) {
         let line_idx = prev_node_idx;
+        console.log(line_idx, i);
         while (entry && entry.type === "extend" || line_idx < i) {
           output[line_idx] = { "type": "parse_again" };
           char_map[line_idx] = null;
           line_idx++;
           entry = cache.entries[line_idx];
         }
-        i = line_idx - 1;
-      } else {
-        output[i] = { "type": "parse_again" };
-        char_map[i] = null;
+        entry = cache.entries[i];
+        console.log(line_idx, i);
       }
     }
+    if (entry && entry.type === "node") prev_node_idx = i;
   }
   if (cache.entries.length < lines.length) cache.entries = new Array(lines.length);
   return {

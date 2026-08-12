@@ -1,11 +1,12 @@
-Ok so this is the first actual release.
+First actual update kinda.
 
-Everything is very WIP and I'll fix bugs as I find them.
+This fixes many bugs while making multiline parsing with integrated AST a lot easier.
 
 # Changelog
+# New features
+- new finish() method for the MultilineParser, it will fire once the node can't be extended anymore
+- new static parse_ast() method for the MultilineParser which will parse a set of lines into an AST
 
-## New features:
-- added the color syntax specifically for infill
-- added the highlight syntax specifically for infill
-- added the underline syntax specifically for infill
-
+# Bug fixes
+- Block quotes didn't parse propperly when a node with higher priority generated first.
+- Block quotes didn't parse propperly when no next line was present

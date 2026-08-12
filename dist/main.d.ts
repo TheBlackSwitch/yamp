@@ -73,6 +73,7 @@ declare class CharMap {
 }
 declare class IsTypeOf {
     static SingleLineParserClass(parser: typeof Parser): parser is typeof SingleLineParser;
+    static MultilineParserClass(parser: typeof Parser): parser is typeof MultilineParser;
     static InlineParserClass(parser: typeof Parser): parser is typeof InlineParser;
     static cachedAstNode(node: ast_node | cached_ast_node): node is cached_ast_node;
 }
@@ -105,7 +106,9 @@ declare class SingleLineParser extends Parser {
     generate(options: options): string | null;
 }
 declare class MultilineParser extends SingleLineParser {
+    finish(): void;
     static try_extend(ast: ast, ...parameters: any): boolean;
+    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number> | number, parsers: parsers, options: options): ast;
     static parse_single_line(line: string, lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, ast: ast, parsers: parsers, options: options, allow_self?: boolean): parser_extend | ast_node;
     extend(...parameters: any): boolean;
 }
@@ -185,11 +188,10 @@ declare class BlockQuote extends MultilineParser {
     CHAR_MAP: CharMap;
     char_map_idx: number;
     char_map_line: number;
-    constructor(text: string, next_line: string | null, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options);
-    extend(text: string, next_line: string): boolean;
+    constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options);
+    extend(text: string): boolean;
+    finish(): void;
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): 0 | BlockQuote | 1;
-    static check_ast_parsing(ast: ast): void;
-    parse_ast(): void;
     static register_escape_chars(): string;
     generate(options: options): string;
 }

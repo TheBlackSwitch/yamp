@@ -221,7 +221,7 @@ export class BlockQuote extends MultilineParser {
     char_map_idx: number;
     char_map_line: number;
 
-    constructor(text: string, next_line: string | null, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options) {
+    constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options) {
         super();
         this.#lines.push(text);
         this.#parsers = parsers;
@@ -229,18 +229,19 @@ export class BlockQuote extends MultilineParser {
         this.CHAR_MAP = CHAR_MAP;
         this.char_map_idx = char_map_idx;
         this.char_map_line = char_map_line;
-        if(next_line === null) this.parse_ast();
     }
 
-    extend(text: string, next_line: string): boolean {
+    extend(text: string): boolean {
         this.#lines.push(text);
-        if(next_line === null) this.parse_ast();
         return true; // Always succeed extending
+    }
+
+    finish(): void {
+        this.#ast = BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_idx, this.#parsers, this.#options);
     }
 
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options) {
         if(line.length === 0 || !line.includes('>')) {
-            this.check_ast_parsing(ast);
             return Parser.FAIL; // no parsing
         }
 
@@ -250,7 +251,6 @@ export class BlockQuote extends MultilineParser {
         }
 
         if(line.charAt(start_idx) !== ">") {
-            this.check_ast_parsing(ast);
             return Parser.FAIL;
         }
 
@@ -263,7 +263,6 @@ export class BlockQuote extends MultilineParser {
         }
 
         if(blockquote_depth === 0 || char !== " ") {
-            this.check_ast_parsing(ast);
             return Parser.FAIL;
         }
 
@@ -278,37 +277,14 @@ export class BlockQuote extends MultilineParser {
         }
 
         if(text.length === 0) {
-            this.check_ast_parsing(ast);
             return Parser.FAIL;
         }
 
-        let possible_next_line = all_lines[line_idx + 1]
-        let next_line = possible_next_line ? possible_next_line : null;
-
         CHAR_MAP.apply_que();
-        if(!this.try_extend(ast, text, next_line)) {
-            return new BlockQuote(text, next_line, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
+        if(!this.try_extend(ast, text)) {
+            return new BlockQuote(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
         }
         return Parser.EXTEND;
-    }
-
-    // Check if the previous ast_node is a block quote and start parsing it's ast because this is their last line
-    static check_ast_parsing(ast: ast) {
-        let prev_ast_node = ast[ast.length - 1];
-        if(prev_ast_node instanceof BlockQuote) {
-            prev_ast_node.parse_ast();
-        }
-    }
-
-    // Handle ast generation here since we might not have all lines available whilst parsing a single line
-    parse_ast() {
-        this.#ast = [];
-        for(const [idx, line] of this.#lines.entries()) {
-            let ast_ast_node = BlockQuote.parse_single_line(line, this.#lines, idx, this.CHAR_MAP, this.char_map_line + idx, this.char_map_idx, this.#ast, this.#parsers, this.#options, true);
-            if(ast_ast_node !== Parser.EXTEND) {
-                this.#ast.push(ast_ast_node);
-            }
-        }
     }
 
     static register_escape_chars(): string {
@@ -316,6 +292,7 @@ export class BlockQuote extends MultilineParser {
     }
 
     generate(options: options) {
+        console.log("BLOCK QUOTE AST:", this.#ast);
         let out = "<blockquote>";
         for(const ast_ast_node of this.#ast) {
             if(IsTypeOf.cachedAstNode(ast_ast_node)) continue;
