@@ -184,26 +184,17 @@ export class MultilineParser extends SingleLineParser {
         return false;
     }
 
-    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number> | number, parsers: parsers, options: options) {
-        let ast: ast = [];
+    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number>, parsers: parsers, options: options, allow_self = true): Array<ast_node> {
+        let ast: Array<ast_node> = [];
         let last_ast_node: ast_node | null = null;
-
-        let final_char_map_indices: Array<number> = [];
-
-        // Handle the charmap index for each line
-        if(Array.isArray(char_map_indices)) {
-            final_char_map_indices = char_map_indices;
-        } else {
-            final_char_map_indices = new Array(lines.length).fill(char_map_indices);
-        }
     
         for(let idx = 0; idx < lines.length; idx++) {
             let line = lines[idx];
             if(line === undefined) continue;
 
-            let char_map_idx = final_char_map_indices[idx];
+            let char_map_idx = char_map_indices[idx];
             if(char_map_idx === undefined) throw Error('[YAMP] Failed to parse AST, provided parameter char_map_indices doesn\'t align with the lines. It\'s to short!');
-            const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options);
+            const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options, allow_self);
     
             // Check if the last node should be finished
             if(idx === lines.length - 1) {

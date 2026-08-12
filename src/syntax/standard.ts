@@ -216,9 +216,9 @@ export class BlockQuote extends MultilineParser {
     #lines: Array<string> = [];
     #parsers: parsers = [];
     #options: options;
-    #ast: ast = [];
+    #ast: Array<ast_node> = [];
     CHAR_MAP: CharMap;
-    char_map_idx: number;
+    char_map_indices: Array<number> = [];
     char_map_line: number;
 
     constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options) {
@@ -227,17 +227,18 @@ export class BlockQuote extends MultilineParser {
         this.#parsers = parsers;
         this.#options = options;
         this.CHAR_MAP = CHAR_MAP;
-        this.char_map_idx = char_map_idx;
+        this.char_map_indices.push(char_map_idx);
         this.char_map_line = char_map_line;
     }
 
-    extend(text: string): boolean {
+    extend(text: string, char_map_idx: number): boolean {
         this.#lines.push(text);
+        this.char_map_indices.push(char_map_idx);
         return true; // Always succeed extending
     }
 
     finish(): void {
-        this.#ast = BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_idx, this.#parsers, this.#options);
+        this.#ast = BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_indices, this.#parsers, this.#options);
     }
 
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options) {
@@ -281,7 +282,7 @@ export class BlockQuote extends MultilineParser {
         }
 
         CHAR_MAP.apply_que();
-        if(!this.try_extend(ast, text)) {
+        if(!this.try_extend(ast, text, new_charmap_idx)) {
             return new BlockQuote(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
         }
         return Parser.EXTEND;
@@ -295,7 +296,6 @@ export class BlockQuote extends MultilineParser {
         console.log("BLOCK QUOTE AST:", this.#ast);
         let out = "<blockquote>";
         for(const ast_ast_node of this.#ast) {
-            if(IsTypeOf.cachedAstNode(ast_ast_node)) continue;
             out+=`${ast_ast_node.generate(options)}`;
         }
         out += "</blockquote>";

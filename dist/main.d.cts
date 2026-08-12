@@ -108,7 +108,7 @@ declare class SingleLineParser extends Parser {
 declare class MultilineParser extends SingleLineParser {
     finish(): void;
     static try_extend(ast: ast, ...parameters: any): boolean;
-    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number> | number, parsers: parsers, options: options): ast;
+    static parse_ast(lines: Array<string>, CHAR_MAP: CharMap, char_map_line: number, char_map_indices: Array<number>, parsers: parsers, options: options, allow_self?: boolean): Array<ast_node>;
     static parse_single_line(line: string, lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, ast: ast, parsers: parsers, options: options, allow_self?: boolean): parser_extend | ast_node;
     extend(...parameters: any): boolean;
 }
@@ -186,10 +186,10 @@ declare class AlternateHeader extends MultilineParser {
 declare class BlockQuote extends MultilineParser {
     #private;
     CHAR_MAP: CharMap;
-    char_map_idx: number;
+    char_map_indices: Array<number>;
     char_map_line: number;
     constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, parsers: parsers, options: options);
-    extend(text: string): boolean;
+    extend(text: string, char_map_idx: number): boolean;
     finish(): void;
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): 0 | BlockQuote | 1;
     static register_escape_chars(): string;

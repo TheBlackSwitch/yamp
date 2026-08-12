@@ -300,21 +300,15 @@ var MultilineParser = class _MultilineParser extends SingleLineParser {
     }
     return false;
   }
-  static parse_ast(lines, CHAR_MAP, char_map_line, char_map_indices, parsers, options) {
+  static parse_ast(lines, CHAR_MAP, char_map_line, char_map_indices, parsers, options, allow_self = true) {
     let ast = [];
     let last_ast_node = null;
-    let final_char_map_indices = [];
-    if (Array.isArray(char_map_indices)) {
-      final_char_map_indices = char_map_indices;
-    } else {
-      final_char_map_indices = new Array(lines.length).fill(char_map_indices);
-    }
     for (let idx = 0; idx < lines.length; idx++) {
       let line = lines[idx];
       if (line === void 0) continue;
-      let char_map_idx = final_char_map_indices[idx];
+      let char_map_idx = char_map_indices[idx];
       if (char_map_idx === void 0) throw Error("[YAMP] Failed to parse AST, provided parameter char_map_indices doesn't align with the lines. It's to short!");
-      const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options);
+      const parsed = this.parse_single_line(line, lines, idx, CHAR_MAP, char_map_line + idx, char_map_idx, ast, parsers, options, allow_self);
       if (idx === lines.length - 1) {
         if (parsed instanceof _MultilineParser) {
           parsed.finish();
@@ -492,7 +486,7 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
   #options;
   #ast = [];
   CHAR_MAP;
-  char_map_idx;
+  char_map_indices = [];
   char_map_line;
   constructor(text, CHAR_MAP, char_map_line, char_map_idx, parsers, options) {
     super();
@@ -500,15 +494,16 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
     this.#parsers = parsers;
     this.#options = options;
     this.CHAR_MAP = CHAR_MAP;
-    this.char_map_idx = char_map_idx;
+    this.char_map_indices.push(char_map_idx);
     this.char_map_line = char_map_line;
   }
-  extend(text) {
+  extend(text, char_map_idx) {
     this.#lines.push(text);
+    this.char_map_indices.push(char_map_idx);
     return true;
   }
   finish() {
-    this.#ast = _BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_idx, this.#parsers, this.#options);
+    this.#ast = _BlockQuote.parse_ast(this.#lines, this.CHAR_MAP, this.char_map_line, this.char_map_indices, this.#parsers, this.#options);
   }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
     if (line.length === 0 || !line.includes(">")) {
@@ -541,7 +536,7 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
       return Parser.FAIL;
     }
     CHAR_MAP.apply_que();
-    if (!this.try_extend(ast, text)) {
+    if (!this.try_extend(ast, text, new_charmap_idx)) {
       return new _BlockQuote(text, CHAR_MAP, char_map_line, new_charmap_idx, parsers, options);
     }
     return Parser.EXTEND;
@@ -553,7 +548,6 @@ var BlockQuote = class _BlockQuote extends MultilineParser {
     console.log("BLOCK QUOTE AST:", this.#ast);
     let out = "<blockquote>";
     for (const ast_ast_node of this.#ast) {
-      if (IsTypeOf.cachedAstNode(ast_ast_node)) continue;
       out += `${ast_ast_node.generate(options)}`;
     }
     out += "</blockquote>";
