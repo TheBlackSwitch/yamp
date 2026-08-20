@@ -1,9 +1,11 @@
-Please just work :(
+Some tweaks to make inline parsing more user friendly
 
 # Changelog
 ### New features
-- Added the "debug" option which will output debugging info to the console when parsing
+- The charmap now also includes a new ``line_map`` which is similar to the absolute map but then split into their corresponding lines
 
-### Bug fixes
-- A very weird and obscure bug with caching causing some parts of the markdown file to dissapear
-- Fixed the naming inside some debug messages
+### Changes
+- Color syntax now only parses when their color and text part contains atleast a single character
+- code blocks are now only parsed when their last line is no more than ```
+- Links are now only parsed when their text or link part contains atleast a single character
+- Images are now only parsed when their source contains atleast a single character

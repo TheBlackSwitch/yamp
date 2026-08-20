@@ -804,7 +804,7 @@ export class Link extends InlineParser {
                     continue;
                 }
 
-                if(next_char === "!") {
+                if(next_char === "!" || link_part.length === 0 || text_part.length === 0) {
                     link_part_done = 0;
                     link_part_open = 0;
                     text_part_open = 0;
@@ -877,7 +877,6 @@ export class Image extends InlineParser {
         let text_part_open = false;
         let image_part = "";
         let text_part = "";
-        let link_end = 0;
 
         for(let i = input.length - 1; i >= 0; i--) {
             let char = input.charAt(i);
@@ -887,7 +886,6 @@ export class Image extends InlineParser {
 
             if(char === ")" && next_char !== '\\') {
                 image_part_open = true;
-                link_end = i;
                 image_part = "";
 
             } else if(char == "(" && next_char !== '\\' && image_part_open) {
@@ -901,6 +899,13 @@ export class Image extends InlineParser {
             } else if(char === '[' && next_char === '!' && image_part_done && text_part_open) {
                 text_part_open = false;
                 image_part_done = false;
+
+                if(image_part.length === 0 || text_part.length === 0) {
+                    image_part_open = false;
+                    image_part_done = false;
+                    text_part_open = false;
+                    continue;
+                }
 
                 // Search through for the image part for the title
 

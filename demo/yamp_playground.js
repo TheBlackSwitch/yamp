@@ -86,7 +86,11 @@ function update_render() {
     let end = Math.floor(window.performance.now() * 1000);
 
     markdown_output.innerHTML = result.html;
-    charmap_output.innerHTML = `Width: ${result.char_map.width_map}<br>Absolute: ${result.char_map.absolute_map}`;
+
+    let line_map = result.char_map.line_map.map(val => "[" + val.toString() + "]")
+    let width_map = result.char_map.width_map.map(val => "[" + val.toString() + "]")
+
+    charmap_output.innerHTML = `Width: ${width_map.join(' ')}<br><br>Absolute: ${result.char_map.absolute_map}<br><br>Line Map: ${line_map.join(' ')}`;
     char_map = result.char_map.absolute_map;
 
     benchmark_results.textContent = `Parsing took: ${end - start}µs`;

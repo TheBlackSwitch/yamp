@@ -142,21 +142,25 @@ var CharMap = class _CharMap {
   }
   absolute_map() {
     let absolute_map = [];
+    let line_map = [];
     let offset = 0;
     for (let line_idx = 0; line_idx < this.width_map.length; line_idx++) {
       let curr_line = this.width_map[line_idx];
       if (curr_line === void 0) continue;
+      let curr_map = [];
       for (let i = 0; i < curr_line.length; i++) {
         let curr_width = curr_line[i];
         if (curr_width !== void 0 && curr_width >= 0 && curr_width < 255) {
           for (let ai = 0; ai <= curr_width; ai++) {
             absolute_map.push(offset);
+            curr_map.push(offset);
           }
         }
         offset++;
       }
+      line_map.push(curr_map);
     }
-    return { "absolute_map": absolute_map, "width_map": this.width_map };
+    return { "absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map };
   }
 };
 var IsTypeOf = class {
@@ -895,7 +899,7 @@ var Link = class extends InlineParser {
           text_part_open -= 1;
           continue;
         }
-        if (next_char === "!") {
+        if (next_char === "!" || link_part.length === 0 || text_part.length === 0) {
           link_part_done = 0;
           link_part_open = 0;
           text_part_open = 0;
@@ -945,13 +949,11 @@ var Image = class extends InlineParser {
     let text_part_open = false;
     let image_part = "";
     let text_part = "";
-    let link_end = 0;
     for (let i = input.length - 1; i >= 0; i--) {
       let char = input.charAt(i);
       let next_char = input.charAt(i - 1);
       if (char === ")" && next_char !== "\\") {
         image_part_open = true;
-        link_end = i;
         image_part = "";
       } else if (char == "(" && next_char !== "\\" && image_part_open) {
         image_part_open = false;
@@ -962,6 +964,12 @@ var Image = class extends InlineParser {
       } else if (char === "[" && next_char === "!" && image_part_done && text_part_open) {
         text_part_open = false;
         image_part_done = false;
+        if (image_part.length === 0 || text_part.length === 0) {
+          image_part_open = false;
+          image_part_done = false;
+          text_part_open = false;
+          continue;
+        }
         let title_start = 0;
         if (image_part.charAt(image_part.length - 1) === '"') {
           for (let idx = image_part.length - 2; idx >= 0; idx--) {
@@ -1168,15 +1176,18 @@ var CodeBlock = class _CodeBlock extends MultilineParser {
     return this.#ended;
   }
   extend(text, end_block = false) {
-    this.#lines.push(text);
-    if (end_block) this.#ended = true;
+    if (end_block) {
+      this.#ended = true;
+    } else {
+      this.#lines.push(text);
+    }
     return true;
   }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
     let prev_node = ast[ast.length - 1];
     if (prev_node instanceof _CodeBlock && !prev_node.is_ended) {
-      if (line.startsWith("```")) {
-        CHAR_MAP.discard_immediately(char_map_line, charmap_idx, line.length);
+      if (line.startsWith("```") && line.length === 4 && line.endsWith("\n")) {
+        CHAR_MAP.discard_immediately(char_map_line, charmap_idx, 3);
         prev_node.extend("", true);
       } else {
         let text = "";
@@ -1211,7 +1222,7 @@ var CodeBlock = class _CodeBlock extends MultilineParser {
     if (line.startsWith("```")) {
       let success = false;
       for (let i = line_idx + 1; i < all_lines.length; i++) {
-        if (all_lines[i]?.startsWith("```")) {
+        if (all_lines[i]?.startsWith("```") && all_lines[i]?.length === 4 && all_lines[i]?.endsWith("\n")) {
           success = true;
           break;
         }
@@ -1499,6 +1510,11 @@ var Color = class extends InlineParser {
         color_done = true;
       } else if (char === "]" && color_done && color_opened) {
         let color_part = input.slice(color_start + 1, color_end);
+        if (color_part.length === 0 || color_end + 1 === i) {
+          color_opened = false;
+          color_done = false;
+          continue;
+        }
         modifiers.push(InlineModifer.new_replace(color_start, color_end - color_start + 1, `<span style="color: ${color_part};">`, true));
         modifiers.push(InlineModifer.new_replace(i, 1, "</span>", true));
       } else if (color_opened && !color_done && !StringHelper.is_text_char(char) && char !== "#") {

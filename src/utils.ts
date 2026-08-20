@@ -5,7 +5,7 @@
 // ==========================================================================================================================================
 
 import type {cached, char_map_que_entry} from "./types"
-import type {absolute_map, ast_node, cached_ast_node, width_map} from "./public_types"
+import type {absolute_map, ast_node, cached_ast_node, line_map, width_map} from "./public_types"
 import { InlineParser, MultilineParser, SingleLineParser, type Parser } from "./parser";
 
 
@@ -197,11 +197,14 @@ export class CharMap {
 
     absolute_map(): absolute_map {
         let absolute_map = [];
+        let line_map: line_map = [];
         let offset = 0;
         
         for(let line_idx = 0; line_idx < this.width_map.length; line_idx++) {
             let curr_line = this.width_map[line_idx];
             if(curr_line === undefined) continue;
+
+            let curr_map: Array<number> = [];
 
             for(let i = 0; i < curr_line.length; i++) {
                 let curr_width = curr_line[i];
@@ -209,13 +212,16 @@ export class CharMap {
                 if(curr_width !== undefined && curr_width >= 0 && curr_width < 255) {
                     for(let ai = 0; ai <= curr_width; ai++) {
                         absolute_map.push(offset);
+                        curr_map.push(offset);
                     }
                 }
 
                 offset++;
             }
+
+            line_map.push(curr_map);
         }
-        return {"absolute_map": absolute_map, "width_map": this.width_map};
+        return {"absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map};
     }
 }
 

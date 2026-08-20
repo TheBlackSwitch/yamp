@@ -127,10 +127,12 @@ declare class MultilineParser extends SingleLineParser {
 
 // a 2 dimensional array that's used to represent the width of each character in the file input
 type width_map = Array<Array<number>>
+type line_map = Array<Array<number>>
 
 interface absolute_map {
     absolute_map: Array<number>,
-    width_map: width_map
+    width_map: width_map,
+    line_map: line_map
 }
 type parsers = Array<typeof Parser>;
 

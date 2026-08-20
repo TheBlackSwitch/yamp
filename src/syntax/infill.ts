@@ -41,6 +41,12 @@ export class Color extends InlineParser {
             } else if(char === "]" && color_done && color_opened) {
                 let color_part = input.slice(color_start + 1, color_end);
 
+                if(color_part.length === 0 || color_end + 1 === i) {
+                    color_opened = false;
+                    color_done = false;
+                    continue;
+                }
+
                 modifiers.push(InlineModifer.new_replace(color_start, color_end - color_start + 1, `<span style="color: ${color_part};">`, true));
                 modifiers.push(InlineModifer.new_replace(i, 1, '</span>', true));
                 

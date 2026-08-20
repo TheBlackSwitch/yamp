@@ -229,8 +229,12 @@ export class CodeBlock extends MultilineParser {
     }
 
     extend(text: string, end_block = false): boolean {
-        this.#lines.push(text);
-        if(end_block) this.#ended = true;
+        
+        if(end_block) {
+            this.#ended = true;
+        } else {
+            this.#lines.push(text);
+        }
         return true; // Always successfully extend
     }
 
@@ -239,8 +243,8 @@ export class CodeBlock extends MultilineParser {
 
 
         if(prev_node instanceof CodeBlock && !prev_node.is_ended) {
-            if(line.startsWith("```")) {
-                CHAR_MAP.discard_immediately(char_map_line, charmap_idx, line.length);
+            if(line.startsWith("```") && line.length === 4 && line.endsWith('\n')) {
+                CHAR_MAP.discard_immediately(char_map_line, charmap_idx, 3);
                 prev_node.extend("", true);
 
             } else {
@@ -265,7 +269,7 @@ export class CodeBlock extends MultilineParser {
 
             let success = false;
             for(let i = line_idx + 1; i < all_lines.length; i++) {
-                if(all_lines[i]?.startsWith("```")) {
+                if(all_lines[i]?.startsWith("```") && all_lines[i]?.length === 4 && all_lines[i]?.endsWith('\n')) {
                     success = true;
                     break;
                 }
