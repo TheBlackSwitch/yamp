@@ -50,7 +50,6 @@ export * from './syntax/standard'
 export * from './syntax/extended'
 export * from './syntax/finalize'
 export * from './syntax/infill'
-export * from './public_types'
 
 
 // ==========================================================================================================================================
