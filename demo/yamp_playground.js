@@ -87,10 +87,10 @@ function update_render() {
 
     markdown_output.innerHTML = result.html;
 
-    let line_map = result.char_map.line_map.map(val => "[" + val.toString() + "]")
-    let width_map = result.char_map.width_map.map(val => "[" + val.toString() + "]")
+    let line_map = result.char_map.line_map.map(val => "[" + val.join(', ') + "]")
+    let width_map = result.char_map.width_map.map(val => "[" + val.join(', ') + "]");
 
-    charmap_output.innerHTML = `Width: ${width_map.join(' ')}<br><br>Absolute: ${result.char_map.absolute_map}<br><br>Line Map: ${line_map.join(' ')}`;
+    charmap_output.innerHTML = `<strong>Width:</strong> [<br>${width_map.join('<br>')}<br>]<br><br><strong>Absolute:</strong> [<br>${result.char_map.absolute_map.join(', ')}<br>]<br><br><strong>Line Map:</strong> [<br>${line_map.join('<br>')}<br>]<br><br><strong>Line Idx Map:</strong> [<br>${result.char_map.line_idx_map.join(', ')}<br>]`;
     char_map = result.char_map.absolute_map;
 
     benchmark_results.textContent = `Parsing took: ${end - start}µs`;
@@ -142,6 +142,7 @@ markdown_output.addEventListener('click', (e) => {
     if(carr_pos === null) return console.warn('Whoops failed to get carret position!');
 
     let index = char_map[carr_pos.global];
+    console.log("[CLICK] Html pos: ", carr_pos.global, " ==> Mardown pos: ", index);
 
     input_elem.selectionStart = index;
     input_elem.selectionEnd = index;

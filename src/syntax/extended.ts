@@ -244,7 +244,10 @@ export class CodeBlock extends MultilineParser {
 
         if(prev_node instanceof CodeBlock && !prev_node.is_ended) {
             if(line.startsWith("```") && line.length === 4 && line.endsWith('\n')) {
-                CHAR_MAP.discard_immediately(char_map_line, charmap_idx, 3);
+                let offs = 0;
+                if(!options.add_zero_width_space_for_cursor_positions) offs = 1;
+
+                CHAR_MAP.discard_immediately(char_map_line, charmap_idx, line.length + offs);
                 prev_node.extend("", true);
 
             } else {
@@ -303,6 +306,7 @@ export class CodeBlock extends MultilineParser {
             out += line;
         }
         out += `</code></pre>`;
+        if(options.add_zero_width_space_for_cursor_positions) out += "<p style=\"font-size: 1px; margin: 0px\">&ZeroWidthSpace;</p>";
         return out;
     }
 }

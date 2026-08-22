@@ -17,7 +17,8 @@ export type line_map = Array<Array<number>>
 export interface absolute_map {
     absolute_map: Array<number>,
     width_map: width_map,
-    line_map: line_map
+    line_map: line_map,
+    line_idx_map: Array<number>
 }
 
 // ======= PARSING =======

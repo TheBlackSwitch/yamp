@@ -143,6 +143,7 @@ var CharMap = class _CharMap {
   absolute_map() {
     let absolute_map = [];
     let line_map = [];
+    let line_idx_map = [];
     let offset = 0;
     for (let line_idx = 0; line_idx < this.width_map.length; line_idx++) {
       let curr_line = this.width_map[line_idx];
@@ -152,6 +153,7 @@ var CharMap = class _CharMap {
         let curr_width = curr_line[i];
         if (curr_width !== void 0 && curr_width >= 0 && curr_width < 255) {
           for (let ai = 0; ai <= curr_width; ai++) {
+            line_idx_map.push(line_idx);
             absolute_map.push(offset);
             curr_map.push(offset);
           }
@@ -160,7 +162,7 @@ var CharMap = class _CharMap {
       }
       line_map.push(curr_map);
     }
-    return { "absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map };
+    return { "absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map, "line_idx_map": line_idx_map };
   }
 };
 var IsTypeOf = class {
@@ -1187,7 +1189,9 @@ var CodeBlock = class _CodeBlock extends MultilineParser {
     let prev_node = ast[ast.length - 1];
     if (prev_node instanceof _CodeBlock && !prev_node.is_ended) {
       if (line.startsWith("```") && line.length === 4 && line.endsWith("\n")) {
-        CHAR_MAP.discard_immediately(char_map_line, charmap_idx, 3);
+        let offs = 0;
+        if (!options.add_zero_width_space_for_cursor_positions) offs = 1;
+        CHAR_MAP.discard_immediately(char_map_line, charmap_idx, line.length + offs);
         prev_node.extend("", true);
       } else {
         let text = "";
@@ -1249,6 +1253,7 @@ var CodeBlock = class _CodeBlock extends MultilineParser {
       out += line;
     }
     out += `</code></pre>`;
+    if (options.add_zero_width_space_for_cursor_positions) out += '<p style="font-size: 1px; margin: 0px">&ZeroWidthSpace;</p>';
     return out;
   }
 };

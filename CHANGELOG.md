@@ -1,11 +1,8 @@
-Some tweaks to make inline parsing more user friendly
+Small fixes
 
 # Changelog
 ### New features
-- The charmap now also includes a new ``line_map`` which is similar to the absolute map but then split into their corresponding lines
+- The charmap now also includes a new ``line_idx_map`` which keeps track of the line index for each html character
 
-### Changes
-- Color syntax now only parses when their color and text part contains atleast a single character
-- code blocks are now only parsed when their last line is no more than ```
-- Links are now only parsed when their text or link part contains atleast a single character
-- Images are now only parsed when their source contains atleast a single character
+### Bugs Fixed
+- Codeblocks caused a weird offset in the charmap

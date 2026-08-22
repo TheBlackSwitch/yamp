@@ -198,6 +198,7 @@ export class CharMap {
     absolute_map(): absolute_map {
         let absolute_map = [];
         let line_map: line_map = [];
+        let line_idx_map: Array<number> = [];
         let offset = 0;
         
         for(let line_idx = 0; line_idx < this.width_map.length; line_idx++) {
@@ -211,6 +212,7 @@ export class CharMap {
 
                 if(curr_width !== undefined && curr_width >= 0 && curr_width < 255) {
                     for(let ai = 0; ai <= curr_width; ai++) {
+                        line_idx_map.push(line_idx);
                         absolute_map.push(offset);
                         curr_map.push(offset);
                     }
@@ -221,7 +223,7 @@ export class CharMap {
 
             line_map.push(curr_map);
         }
-        return {"absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map};
+        return {"absolute_map": absolute_map, "width_map": this.width_map, "line_map": line_map, "line_idx_map": line_idx_map};
     }
 }
 
