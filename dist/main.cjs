@@ -304,6 +304,16 @@ var InlineModifer = class _InlineModifer {
     this.#modify_char_map = modify_char_map;
   }
   apply(line, CHAR_MAP, char_map_line, char_map_idx) {
+    let target_line = char_map_line;
+    let curr_line_map = CHAR_MAP.width_map[target_line];
+    if (curr_line_map === void 0) return line;
+    let index = this.#index + char_map_idx;
+    while (index > curr_line_map.length - 1) {
+      index -= curr_line_map.length;
+      target_line++;
+      curr_line_map = CHAR_MAP.width_map[target_line];
+      if (curr_line_map === void 0) return line;
+    }
     if (this.#data.type === "insert") {
       line = StringHelper.insert_substring(line, this.#index, 0, this.#data.value);
     } else if (this.#data.type === "delete") {
@@ -409,23 +419,36 @@ var MultilineParser = class _MultilineParser extends SingleLineParser {
 // src/syntax/standard.ts
 var Paragraph = class _Paragraph extends MultilineParser {
   #text;
-  constructor(text) {
+  #CHAR_MAP;
+  #parsers;
+  #options;
+  #char_map_line;
+  #charmap_idx;
+  constructor(text, CHAR_MAP, char_map_line, charmap_idx, parsers, options) {
     super();
     this.#text = `${text}<br>`;
+    this.#CHAR_MAP = CHAR_MAP;
+    this.#parsers = parsers;
+    this.#options = options;
+    this.#char_map_line = char_map_line;
+    this.#charmap_idx = charmap_idx;
   }
   extend(text) {
     this.#text += `${text}<br>`;
     return true;
   }
+  finish() {
+    this.#text = _Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
+    this.#text = _Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
+    console.log("FINISH!");
+  }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
-    line = this.parse_inline(line, CHAR_MAP, char_map_line, charmap_idx, parsers, options);
-    line = this.escape_text(line, CHAR_MAP, char_map_line, charmap_idx, parsers);
     if (line.length <= 1 && options.add_zero_width_space_for_cursor_positions !== false) {
       line = "\u200B" + line;
       CHAR_MAP.extend_immediately(char_map_line, charmap_idx, 1);
     }
     if (!this.try_extend(ast, line)) {
-      return new _Paragraph(line);
+      return new _Paragraph(line, CHAR_MAP, char_map_line, charmap_idx, parsers, options);
     }
     return Parser.EXTEND;
   }
