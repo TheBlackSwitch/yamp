@@ -17,7 +17,7 @@ or enhancement of artificial intelligence systems, machine learning models or an
 algorithms to learn patterns and make predictions without being explicitly programmed. This includes, not only and all, for commercial,
 non-commercial, educational, research, or personal projects.
 
-This software is provided as is, without any warranty or responsability.
+This software is provided as is, without any warranty.
 
 */
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ This software is provided as is, without any warranty or responsability.
 // - Images (fix the mess)
 // - Links (fix the mess)
 // - Underscore emphasis, emphasis => First build a list of all underscores and then do the lookahead on that list
+// - the #wrap_idx method in the char map class. This currently runs FOR EVERY CHAR that get's discarded
 
 // ==========================================================================================================================================
 // ------------------------------------------------------------------------------------------------------------------------------------------

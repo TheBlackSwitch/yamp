@@ -27,7 +27,7 @@ export class EscapeIncompleteHtml extends InlineParser {
 
     static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number): Array<InlineModifer> {
 
-        let modifiers = [];
+        let modifiers: Array<InlineModifer> = [];
 
         let stack: Array<stack_entry | undefined> = [];
         let is_closing = false;
@@ -109,42 +109,21 @@ export class EscapeIncompleteHtml extends InlineParser {
                             modifiers.push(InlineModifer.new_replace(curr_tag.start_location + curr_tag.full_text.length + 1, 1, '&gt;'));
                             stack.splice(stack.length - 1, 1);
 
+                        // Ok it isn't a faulty close tag, there's just a random tag in between
                         } else {
-                            if(stack[found_idx]?.invalid_attributes) { // Invalid html atributes so don't close and 
-                                stack.unshift(stack[found_idx]);             // move all the way to the front of the stack
-                                stack.unshift(stack[stack.length - 1]);
-                                stack.splice(found_idx, 1); // remove the opening and closing tag
-                                stack.splice(stack.length - 1, 1);
-                            } else {
-
-                                // Remove the html characters from the char map
-                                let opening = stack[found_idx];
-                                let closing = stack[stack.length - 1];
-                                if(!opening || !closing) continue;
-                                CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
-                                CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
-
-                                stack.splice(found_idx, 1); // remove the opening and closing tag
-                                stack.splice(stack.length - 1, 1);
-                            }
+                            const mods = this.close_html_tags(stack[found_idx], stack[stack.length - 1], stack, input, CHAR_MAP, char_map_line);
+                            if(mods !== null) modifiers.push(...mods);
                         }
+
+                    // Yay the tags align perfectly
                     } else {
-                        if(stack[stack.length - 2]?.invalid_attributes === true) { // Invalid html atributes so don't close and 
-                            stack.unshift(stack[stack.length - 1]);      // move all the way to the front of the stack
-                            stack.unshift(stack[stack.length - 2]);
-                            stack.splice(stack.length - 2, 2);
-                        } else {
-                            let opening = stack[stack.length - 2];
-                            let closing = stack[stack.length - 1];
-                            if(!opening || !closing) continue;
-                            CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
-                            CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
-
-                            stack.splice(stack.length - 2, 2); // remove the opening and closing tag
-                        }
+                        const mods = this.close_html_tags(stack[stack.length - 2], stack[stack.length - 1], stack, input, CHAR_MAP, char_map_line);
+                        if(mods !== null) modifiers.push(...mods);
                     }
+
+                // html void tags shouldn't be added to the stack
                 } else {
-                    switch(stack[stack.length - 1]?.html_tag) { // html void tags shouldn't be added to the stack
+                    switch(stack[stack.length - 1]?.html_tag) { 
                         case "br":
                         case "hr":
                         case "img":
@@ -168,6 +147,8 @@ export class EscapeIncompleteHtml extends InlineParser {
 
             } else if(is_inside_tag) {
                 let last = stack[stack.length - 1];
+
+                // Verify if the html attributes are correct
                 if(is_html_attributes) {
                     if(!StringHelper.is_whitespace(curr_char) && !StringHelper.is_valid_char(curr_char)) {
                         invalid_attributes = true;
@@ -188,6 +169,8 @@ export class EscapeIncompleteHtml extends InlineParser {
                             attributes_single_quotes_open = true;
                         }
                     }
+
+                // Construct the html tag name
                 } else {
                     if(last !== undefined) last.html_tag += curr_char;
                 }
@@ -236,6 +219,7 @@ export class EscapeIncompleteHtml extends InlineParser {
         // -------------------------------
         //  Manual backslash escaping                            
         // -------------------------------
+
         for(let i = 0; i < input.length; i++) {
             let prev_char = input.charAt(i - 1);
             if(prev_char === "\\") {
@@ -257,6 +241,39 @@ export class EscapeIncompleteHtml extends InlineParser {
         }
 
         return modifiers;
+    }
+
+    static close_html_tags(opening: stack_entry | undefined, closing: stack_entry | undefined, stack: Array<stack_entry | undefined>, input: string, CHAR_MAP: CharMap, char_map_line: number): Array<InlineModifer> | null {
+        let modifiers: Array<InlineModifer> = [];
+        
+        if(opening === undefined || closing === undefined) throw Error('[YAMP]: Failed to close html tags, opening and or closing tag is undefined!')
+        if(opening?.invalid_attributes) { // Invalid html atributes so don't close and 
+            stack.unshift(closing);      // move all the way to the front of the stack
+            stack.unshift(opening);
+            stack.splice(stack.length - 2, 2);
+
+        // Ok the tags work out perfectly
+        } else {
+            CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
+            CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
+
+            stack.splice(stack.length - 2, 2); // remove the opening and closing tag
+
+            // Remove any trailing newline after the opening tag
+            let next_char = input.charAt(opening.start_location + opening.full_text.length + 2);
+            if(next_char === "\n") {
+                modifiers.push(InlineModifer.new_delete(opening.start_location + opening.full_text.length + 2, 1, true));
+            }
+
+            // Remove any trailing newline after the closing tag
+            next_char = input.charAt(closing.start_location + closing.full_text.length + 2);
+            if(next_char === "\n") {
+                modifiers.push(InlineModifer.new_delete(closing.start_location + closing.full_text.length + 2, 1, true));
+            }
+            
+            return modifiers;
+        }
+        return null;
     }
 
     // Ehh I think this is a cool solution I came up with

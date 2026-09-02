@@ -124,6 +124,9 @@ var YAMP = (() => {
   var CharMap = class _CharMap {
     width_map;
     que = [];
+    // -------------------------------
+    //  Constructors                            
+    // -------------------------------
     constructor(width_map) {
       this.width_map = width_map;
     }
@@ -142,6 +145,9 @@ var YAMP = (() => {
       }
       return new _CharMap(width_map);
     }
+    // -------------------------------
+    //  Que handlers                            
+    // -------------------------------
     // Append a discard to the que
     que_discard_event(line_idx, start, count) {
       if (count < 1) return;
@@ -175,22 +181,41 @@ var YAMP = (() => {
         }
       }
     }
+    // -------------------------------
+    //  Instant modifiers                            
+    // -------------------------------
     // Set a character to have a width of 0
     discard_immediately(line_idx, start, count) {
       for (let i = 0; i < count; i++) {
-        if (this.width_map[line_idx]) this.width_map[line_idx][i + start] = 255;
+        const result = this.#wrap_idx(i + start, line_idx);
+        if (result.curr_map !== void 0) result.curr_map[result.idx] = 255;
       }
     }
     // Increase the width of a character
     extend_immediately(line_idx, target_idx, amount) {
-      if (this.width_map[line_idx] === void 0 || this.width_map[line_idx][target_idx] === void 0 || target_idx >= this.width_map[line_idx].length) {
-        return;
-      }
-      if (this.width_map[line_idx][target_idx] + amount >= 255) {
+      const result = this.#wrap_idx(target_idx, line_idx);
+      const final_idx = result.idx;
+      if (result.curr_map[final_idx] !== void 0 && result.curr_map[final_idx] + amount >= 255) {
         throw Error("Failed to extend charmap, trying to extend width map beyond 254-width limit!");
       }
-      this.width_map[line_idx][target_idx] += amount;
+      if (result.curr_map[final_idx] !== void 0) result.curr_map[final_idx] += amount;
     }
+    // When an index is out of range of the current line, wrap to the next line
+    #wrap_idx(idx, line) {
+      let final_idx = idx;
+      let final_line_idx = line;
+      let curr_map = this.width_map[final_line_idx];
+      while (curr_map !== void 0 && final_idx > curr_map.length - 1) {
+        final_idx -= curr_map.length;
+        final_line_idx++;
+        curr_map = this.width_map[final_line_idx];
+      }
+      if (curr_map === void 0) throw Error("Failed to discard charmap char. Array index out of range!");
+      return { "idx": final_idx, "line": final_line_idx, "curr_map": curr_map };
+    }
+    // -------------------------------
+    //  Getters                            
+    // -------------------------------
     get_copy() {
       return structuredClone(this.width_map);
     }
@@ -304,23 +329,13 @@ var YAMP = (() => {
       this.#modify_char_map = modify_char_map;
     }
     apply(line, CHAR_MAP, char_map_line, char_map_idx) {
-      let target_line = char_map_line;
-      let curr_line_map = CHAR_MAP.width_map[target_line];
-      if (curr_line_map === void 0) return line;
-      let index = this.#index + char_map_idx;
-      while (index > curr_line_map.length - 1) {
-        index -= curr_line_map.length;
-        target_line++;
-        curr_line_map = CHAR_MAP.width_map[target_line];
-        if (curr_line_map === void 0) return line;
-      }
       if (this.#data.type === "insert") {
         line = StringHelper.insert_substring(line, this.#index, 0, this.#data.value);
       } else if (this.#data.type === "delete") {
-        if (this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + this.#index, this.#data.count);
+        if (this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, this.#index + char_map_idx, this.#data.count);
         line = StringHelper.insert_substring(line, this.#index, this.#data.count, "");
       } else if (this.#data.type === "replace") {
-        if (this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + this.#index, this.#data.count);
+        if (this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, this.#index + char_map_idx, this.#data.count);
         line = StringHelper.insert_substring(line, this.#index, this.#data.count, this.#data.value);
       }
       return line;
@@ -426,7 +441,7 @@ var YAMP = (() => {
     #charmap_idx;
     constructor(text, CHAR_MAP, char_map_line, charmap_idx, parsers, options) {
       super();
-      this.#text = `${text}<br>`;
+      this.#text = `${text}`;
       this.#CHAR_MAP = CHAR_MAP;
       this.#parsers = parsers;
       this.#options = options;
@@ -434,13 +449,14 @@ var YAMP = (() => {
       this.#charmap_idx = charmap_idx;
     }
     extend(text) {
-      this.#text += `${text}<br>`;
+      this.#text += `${text}`;
       return true;
     }
     finish() {
+      console.log(this.#text);
       this.#text = _Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
       this.#text = _Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
-      console.log("FINISH!");
+      this.#text = this.#text.replaceAll("\n", "\n<br>");
     }
     static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
       if (line.length <= 1 && options.add_zero_width_space_for_cursor_positions !== false) {
@@ -1439,38 +1455,15 @@ var YAMP = (() => {
                 modifiers.push(InlineModifer.new_replace(curr_tag.start_location + curr_tag.full_text.length + 1, 1, "&gt;"));
                 stack.splice(stack.length - 1, 1);
               } else {
-                if (stack[found_idx]?.invalid_attributes) {
-                  stack.unshift(stack[found_idx]);
-                  stack.unshift(stack[stack.length - 1]);
-                  stack.splice(found_idx, 1);
-                  stack.splice(stack.length - 1, 1);
-                } else {
-                  let opening = stack[found_idx];
-                  let closing = stack[stack.length - 1];
-                  if (!opening || !closing) continue;
-                  CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
-                  CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
-                  stack.splice(found_idx, 1);
-                  stack.splice(stack.length - 1, 1);
-                }
+                const mods = this.close_html_tags(stack[found_idx], stack[stack.length - 1], stack, input, CHAR_MAP, char_map_line);
+                if (mods !== null) modifiers.push(...mods);
               }
             } else {
-              if (stack[stack.length - 2]?.invalid_attributes === true) {
-                stack.unshift(stack[stack.length - 1]);
-                stack.unshift(stack[stack.length - 2]);
-                stack.splice(stack.length - 2, 2);
-              } else {
-                let opening = stack[stack.length - 2];
-                let closing = stack[stack.length - 1];
-                if (!opening || !closing) continue;
-                CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
-                CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
-                stack.splice(stack.length - 2, 2);
-              }
+              const mods = this.close_html_tags(stack[stack.length - 2], stack[stack.length - 1], stack, input, CHAR_MAP, char_map_line);
+              if (mods !== null) modifiers.push(...mods);
             }
           } else {
             switch (stack[stack.length - 1]?.html_tag) {
-              // html void tags shouldn't be added to the stack
               case "br":
               case "hr":
               case "img":
@@ -1561,6 +1554,29 @@ var YAMP = (() => {
         }
       }
       return modifiers;
+    }
+    static close_html_tags(opening, closing, stack, input, CHAR_MAP, char_map_line) {
+      let modifiers = [];
+      if (opening === void 0 || closing === void 0) throw Error("[YAMP]: Failed to close html tags, opening and or closing tag is undefined!");
+      if (opening?.invalid_attributes) {
+        stack.unshift(closing);
+        stack.unshift(opening);
+        stack.splice(stack.length - 2, 2);
+      } else {
+        CHAR_MAP.discard_immediately(char_map_line, opening.start_location, opening.full_text.length + 2);
+        CHAR_MAP.discard_immediately(char_map_line, closing.start_location, closing.full_text.length + 2);
+        stack.splice(stack.length - 2, 2);
+        let next_char = input.charAt(opening.start_location + opening.full_text.length + 2);
+        if (next_char === "\n") {
+          modifiers.push(InlineModifer.new_delete(opening.start_location + opening.full_text.length + 2, 1, true));
+        }
+        next_char = input.charAt(closing.start_location + closing.full_text.length + 2);
+        if (next_char === "\n") {
+          modifiers.push(InlineModifer.new_delete(closing.start_location + closing.full_text.length + 2, 1, true));
+        }
+        return modifiers;
+      }
+      return null;
     }
     // Ehh I think this is a cool solution I came up with
     static verify_html_entity(html_entity) {

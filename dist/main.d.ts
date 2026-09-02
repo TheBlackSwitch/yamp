@@ -58,6 +58,7 @@ declare class StringHelper {
     static turn_into_ascii(input: string): string;
 }
 declare class CharMap {
+    #private;
     width_map: number[][];
     que: Array<char_map_que_entry>;
     constructor(width_map: Array<Array<number>>);
@@ -276,8 +277,16 @@ declare class Strikethrough extends InlineParser {
     static register_escape_chars(): string;
 }
 
+interface stack_entry {
+    full_text: string;
+    start_location: number;
+    got_closing_bracket: number;
+    html_tag: string;
+    invalid_attributes?: boolean;
+}
 declare class EscapeIncompleteHtml extends InlineParser {
     static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number): Array<InlineModifer>;
+    static close_html_tags(opening: stack_entry | undefined, closing: stack_entry | undefined, stack: Array<stack_entry | undefined>, input: string, CHAR_MAP: CharMap, char_map_line: number): Array<InlineModifer> | null;
     static verify_html_entity(html_entity: string): boolean;
     static register_escape_chars(): string;
 }

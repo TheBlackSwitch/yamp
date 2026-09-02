@@ -30,7 +30,7 @@ export class Paragraph extends MultilineParser {
 
     constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, parsers: parsers, options: options) {
         super();
-        this.#text = `${text}<br>`;
+        this.#text = `${text}`;
         this.#CHAR_MAP = CHAR_MAP;
         this.#parsers = parsers;
         this.#options = options;
@@ -39,14 +39,15 @@ export class Paragraph extends MultilineParser {
     }
 
     extend(text: string) {
-        this.#text += `${text}<br>`;
+        this.#text += `${text}`;
         return true;
     }
 
     finish() {
+        console.log(this.#text);
         this.#text = Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
         this.#text = Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
-        console.log('FINISH!')
+        this.#text = this.#text.replaceAll('\n', '\n<br>');
     }
 
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): ast_node | parser_extend {
