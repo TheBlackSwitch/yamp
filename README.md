@@ -24,11 +24,10 @@ The project is designed in such a way that it's both really easy to extend and c
 - Configurable
 - Extensable
 - High performance due to extensive caching and single-pass parsing
-- Simplicty
+- Simplicty (outside of caching)
 
 **Cons**:
-- Doesn't colsely match common mark
-- HTML can't span across multiple lines (I still need to fix this but it's a lot of work)
+- Doesn't closely match common mark
 
 ## Features
 
