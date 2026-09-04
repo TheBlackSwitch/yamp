@@ -7,7 +7,7 @@
 import { InlineModifer, InlineParser, MultilineParser, Parser, SingleLineParser } from "../parser";
 import type { ast, ast_node, options, parsers } from "../public_types";
 import type { parser_extend, parser_fail } from "../types";
-import { IsTypeOf, StringHelper, type CharMap } from "../utils";
+import { CharMap, IsTypeOf, StringHelper } from "../utils";
 
 
 // ==========================================================================================================================================
@@ -22,28 +22,41 @@ import { IsTypeOf, StringHelper, type CharMap } from "../utils";
 
 export class Paragraph extends MultilineParser {
     #text: string;
+    #CHAR_MAP: CharMap;
+    #parsers: parsers;
+    #options: options;
+    #char_map_line: number;
+    #charmap_idx: number;
 
-    constructor(text: string) {
+    constructor(text: string, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, parsers: parsers, options: options) {
         super();
-        this.#text = `${text}<br>`;
+        this.#text = `${text}`;
+        this.#CHAR_MAP = CHAR_MAP;
+        this.#parsers = parsers;
+        this.#options = options;
+        this.#char_map_line = char_map_line;
+        this.#charmap_idx = charmap_idx;
     }
 
     extend(text: string) {
-        this.#text += `${text}<br>`;
+        this.#text += `${text}`;
         return true;
     }
 
-    static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): ast_node | parser_extend {
-        line = this.parse_inline(line, CHAR_MAP, char_map_line, charmap_idx, parsers, options);
-        line = this.escape_text(line, CHAR_MAP, char_map_line, charmap_idx, parsers);
+    finish() {
+        this.#text = Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
+        this.#text = Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
+        this.#text = this.#text.replaceAll('\n', '\n<br>');
+    }
 
+    static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): ast_node | parser_extend {
         if(line.length <= 1 && options.add_zero_width_space_for_cursor_positions !== false) {
             line = "\u200B" + line;
             CHAR_MAP.extend_immediately(char_map_line, charmap_idx, 1); // Extend the newline to also include the zero width space
         }
 
         if(!this.try_extend(ast, line)) {
-            return new Paragraph(line);
+            return new Paragraph(line, CHAR_MAP, char_map_line, charmap_idx, parsers, options);
         }
         return Parser.EXTEND;
     }
@@ -293,7 +306,7 @@ export class BlockQuote extends MultilineParser {
     }
 
     generate(options: options) {
-        console.log("BLOCK QUOTE AST:", this.#ast);
+        if(options.debug) console.log("BLOCK QUOTE AST:", this.#ast);
         let out = "<blockquote>";
         for(const ast_ast_node of this.#ast) {
             out+=`${ast_ast_node.generate(options)}`;
@@ -709,6 +722,8 @@ export class Code extends InlineParser {
                     i++;
                     if(count >= 3) continue;
                 }
+
+                if(count >= 3) continue;
 
                 backticks.push({
                     "count": count,

@@ -17,7 +17,7 @@ or enhancement of artificial intelligence systems, machine learning models or an
 algorithms to learn patterns and make predictions without being explicitly programmed. This includes, not only and all, for commercial,
 non-commercial, educational, research, or personal projects.
 
-This software is provided as is, without any warranty or responsability.
+This software is provided as is, without any warranty.
 
 */
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -29,6 +29,7 @@ This software is provided as is, without any warranty or responsability.
 // - Images (fix the mess)
 // - Links (fix the mess)
 // - Underscore emphasis, emphasis => First build a list of all underscores and then do the lookahead on that list
+// - the #wrap_idx method in the char map class. This currently runs FOR EVERY CHAR that get's discarded
 
 // ==========================================================================================================================================
 // ------------------------------------------------------------------------------------------------------------------------------------------
@@ -160,7 +161,7 @@ function parse_to_lines(text: string) {
         lines.push(text.slice(start));
     }
 
-    lines[lines.length - 1] += "\n";
+    if(!lines[lines.length - 1]?.endsWith('\n')) lines[lines.length - 1] += "\n";
 
     return lines;
 }
@@ -189,12 +190,18 @@ function gen_ast(lines: Array<string>, cached: cached, CHAR_MAP: CharMap, parser
             if(!curr_entry.output) throw Error('[YAMP]: Cached AST node doesn\'t have a valid output!')
             ast.push({"type": "cached", "output": curr_entry.output, "line_idx": idx});
             if(curr_entry.line_count) idx += curr_entry.line_count - 1;
+
+            // Check if the last node should be finished after a cached node
+            if(last_ast_node !== null && last_ast_node instanceof MultilineParser) {
+                if(final_options?.debug) console.log(last_ast_node);
+                last_ast_node.finish();
+                last_ast_node = null;
+            }
             continue;
         }
         const parsed = parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
 
-        // Check if the last node should be finished
-        
+        // Check if the last node should be finished for the last line   
         if(idx === lines.length - 1) {
             if(parsed instanceof MultilineParser) {
                 parsed.finish();
@@ -204,10 +211,13 @@ function gen_ast(lines: Array<string>, cached: cached, CHAR_MAP: CharMap, parser
         }
 
         if(parsed !== Parser.EXTEND) {
+
+            // Check if the last node should be finished after a new node
             if(last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
                 if(final_options?.debug) console.log(last_ast_node);
                 if(final_options?.debug) console.log(parsed);
                 last_ast_node.finish();
+                last_ast_node = null;
             }
 
             last_ast_node = parsed;

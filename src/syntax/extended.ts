@@ -241,7 +241,6 @@ export class CodeBlock extends MultilineParser {
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options) {
         let prev_node = ast[ast.length - 1];
 
-
         if(prev_node instanceof CodeBlock && !prev_node.is_ended) {
             if(line.startsWith("```") && line.length === 4 && line.endsWith('\n')) {
                 let offs = 0;
@@ -268,8 +267,6 @@ export class CodeBlock extends MultilineParser {
         }
 
         if(line.startsWith("```")) {
-
-
             let success = false;
             for(let i = line_idx + 1; i < all_lines.length; i++) {
                 if(all_lines[i]?.startsWith("```") && all_lines[i]?.length === 4 && all_lines[i]?.endsWith('\n')) {

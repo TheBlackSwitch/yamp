@@ -108,12 +108,12 @@ export class InlineModifer {
 
         } else if(this.#data.type === "delete") {
 
-            if(this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + this.#index, this.#data.count);
+            if(this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, this.#index + char_map_idx, this.#data.count);
             line = StringHelper.insert_substring(line, this.#index, this.#data.count, "");
 
         } else if(this.#data.type === "replace") {
 
-            if(this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + this.#index, this.#data.count);
+            if(this.#modify_char_map) CHAR_MAP.discard_immediately(char_map_line, this.#index + char_map_idx, this.#data.count);
             line = StringHelper.insert_substring(line, this.#index, this.#data.count, this.#data.value);
 
         }
@@ -137,7 +137,7 @@ export class SingleLineParser extends Parser {
             parsers === undefined || options === undefined
         ) throw Error("[YAMP]: Failed to run function parse_inline(), missing arguments to function! Expected 6");
         if(parsers.length > 0) {
-            let modifiers = [];
+            let modifiers: Array<InlineModifer> = [];
 
             for(const parser of parsers) {
                 if(IsTypeOf.InlineParserClass(parser)) {

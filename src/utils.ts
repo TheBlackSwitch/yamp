@@ -112,6 +112,10 @@ export class CharMap {
     width_map;
     que: Array<char_map_que_entry> = [];
 
+    // -------------------------------
+    //  Constructors                            
+    // -------------------------------
+
     constructor(width_map: Array<Array<number>>) {
         this.width_map = width_map;
     }
@@ -135,6 +139,10 @@ export class CharMap {
         }
         return new CharMap(width_map);
     }
+
+    // -------------------------------
+    //  Que handlers                            
+    // -------------------------------
     
     // Append a discard to the que
     que_discard_event(line_idx: number, start: number, count: number): void {
@@ -173,23 +181,50 @@ export class CharMap {
         }
     }
 
+    // -------------------------------
+    //  Instant modifiers                            
+    // -------------------------------
+
     // Set a character to have a width of 0
     discard_immediately(line_idx: number, start: number, count: number): void {
         for(let i = 0; i < count; i++) {
-            if(this.width_map[line_idx]) this.width_map[line_idx][i + start] = 255;
+            const result = this.#wrap_idx(i + start, line_idx);
+            if(result.curr_map !== undefined) result.curr_map[result.idx] = 255;
         }
     }
 
     // Increase the width of a character
     extend_immediately(line_idx: number, target_idx: number, amount: number): void {
-        if(this.width_map[line_idx] === undefined || this.width_map[line_idx][target_idx] === undefined  || target_idx >= this.width_map[line_idx].length) {
-            return;
-        }
-        if(this.width_map[line_idx][target_idx] + amount >= 255) {
+        const result = this.#wrap_idx(target_idx, line_idx);
+        const final_idx = result.idx;
+                
+        if(result.curr_map[final_idx] !== undefined && result.curr_map[final_idx] + amount >= 255) {
             throw Error('Failed to extend charmap, trying to extend width map beyond 254-width limit!');
         }
-        this.width_map[line_idx][target_idx] += amount;
+
+        if(result.curr_map[final_idx] !== undefined /* This will absolutely never happen (I love typescript :wilted_rose:) */ ) result.curr_map[final_idx] += amount;
     }
+
+    // When an index is out of range of the current line, wrap to the next line
+    #wrap_idx(idx: number, line: number) {
+        let final_idx = idx;
+        let final_line_idx = line;
+
+        let curr_map = this.width_map[final_line_idx];
+        while(curr_map !== undefined && final_idx > curr_map.length - 1) {
+            final_idx -= curr_map.length;
+            final_line_idx++;
+            curr_map = this.width_map[final_line_idx];
+        }
+
+        if(curr_map === undefined) throw Error('Failed to discard charmap char. Array index out of range!')
+
+        return {"idx": final_idx, "line": final_line_idx, "curr_map": curr_map};
+    }
+
+    // -------------------------------
+    //  Getters                            
+    // -------------------------------
 
     get_copy(): width_map {
         return structuredClone(this.width_map);
