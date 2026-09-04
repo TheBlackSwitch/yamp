@@ -44,7 +44,6 @@ export class Paragraph extends MultilineParser {
     }
 
     finish() {
-        console.log(this.#text);
         this.#text = Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
         this.#text = Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
         this.#text = this.#text.replaceAll('\n', '\n<br>');
@@ -307,7 +306,7 @@ export class BlockQuote extends MultilineParser {
     }
 
     generate(options: options) {
-        console.log("BLOCK QUOTE AST:", this.#ast);
+        if(options.debug) console.log("BLOCK QUOTE AST:", this.#ast);
         let out = "<blockquote>";
         for(const ast_ast_node of this.#ast) {
             out+=`${ast_ast_node.generate(options)}`;
@@ -723,6 +722,8 @@ export class Code extends InlineParser {
                     i++;
                     if(count >= 3) continue;
                 }
+
+                if(count >= 3) continue;
 
                 backticks.push({
                     "count": count,

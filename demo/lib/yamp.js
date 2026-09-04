@@ -878,6 +878,7 @@ var Code = class extends InlineParser {
           i++;
           if (count >= 3) continue;
         }
+        if (count >= 3) continue;
         backticks.push({
           "count": count,
           "start": start
@@ -1750,7 +1751,7 @@ function parse_to_lines(text) {
   if (start < text.length) {
     lines.push(text.slice(start));
   }
-  lines[lines.length - 1] += "\n";
+  if (!lines[lines.length - 1]?.endsWith("\n")) lines[lines.length - 1] += "\n";
   return lines;
 }
 function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
@@ -1767,6 +1768,11 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
       if (!curr_entry.output) throw Error("[YAMP]: Cached AST node doesn't have a valid output!");
       ast.push({ "type": "cached", "output": curr_entry.output, "line_idx": idx });
       if (curr_entry.line_count) idx += curr_entry.line_count - 1;
+      if (last_ast_node !== null && last_ast_node instanceof MultilineParser) {
+        if (final_options?.debug) console.log(last_ast_node);
+        last_ast_node.finish();
+        last_ast_node = null;
+      }
       continue;
     }
     const parsed = parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
@@ -1782,6 +1788,7 @@ function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
         if (final_options?.debug) console.log(last_ast_node);
         if (final_options?.debug) console.log(parsed);
         last_ast_node.finish();
+        last_ast_node = null;
       }
       last_ast_node = parsed;
       ast.push(parsed);
