@@ -8,6 +8,8 @@ It comes with all basic markdown syntax plus built-in char map generation which 
 
 Since it's designed for in-text parsing, the parser **doesn't** closely follow the CommonMark specifications as they aren't always intuitive for an in-text editor. Most of these are fully intended to improve the end-user experience.
 
+Take a look at the [wiki](https://github.com/TheBlackSwitch/yamp/wiki) for development information!
+
 ## Table of contents
 - [Design](#design)
 - [Features](#features)
