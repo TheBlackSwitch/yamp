@@ -48,5 +48,8 @@
         "character_map",
         "live",
         "in-text"
-    ]
+    ],
+    "allowScripts": {
+        "esbuild@0.27.7": true
+    }
 }

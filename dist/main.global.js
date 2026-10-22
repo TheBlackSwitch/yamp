@@ -453,7 +453,6 @@ var YAMP = (() => {
       return true;
     }
     finish() {
-      console.log(this.#text);
       this.#text = _Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
       this.#text = _Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
       this.#text = this.#text.replaceAll("\n", "\n<br>");
@@ -644,7 +643,7 @@ var YAMP = (() => {
       return ">";
     }
     generate(options) {
-      console.log("BLOCK QUOTE AST:", this.#ast);
+      if (options.debug) console.log("BLOCK QUOTE AST:", this.#ast);
       let out = "<blockquote>";
       for (const ast_ast_node of this.#ast) {
         out += `${ast_ast_node.generate(options)}`;
