@@ -1,6 +1,10 @@
 // -------------------------------
 //  Yap I had to write my own
 //  markdown parser for questbook
+//  F*ck my life
+//  but eyy now I'm suddenly
+//  the proud owner of a janky
+//  ahh markdown parser
 // -------------------------------
 
 // ==========================================================================================================================================
@@ -296,11 +300,13 @@ function clear_cache() {
 
 // Re-use any lines from the previous run
 function parse_cache(lines: Array<string>, options: options): cached {
-
     let output: Array<cache_entry> = cache.entries.slice(0, lines.length);
     let char_map: Array<Array<number> | null> = cache.char_map.slice(0, lines.length);
 
     let prev_node_idx = -1;
+
+    cache.entries = cache.entries.slice(0, lines.length)
+    cache.char_map = cache.char_map.slice(0, lines.length)
 
     for(let i = 0; i < lines.length; i++) {
         if(cache.entries.length <= i)  {

@@ -46,12 +46,22 @@ export class Paragraph extends MultilineParser {
     finish() {
         this.#text = Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
         this.#text = Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
+
+        // add the zero width space chars for cursor positions (do this after parsing inline to not influence it)
+        if(this.#options.add_zero_width_space_for_cursor_positions !== false) {
+            this.#text = this.#text.replaceAll(/^\n/gm, '\u200B\n');
+        }
+
         this.#text = this.#text.replaceAll('\n', '\n<br>');
     }
 
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options): ast_node | parser_extend {
         if(line.length <= 1 && options.add_zero_width_space_for_cursor_positions !== false) {
-            line = "\u200B" + line;
+            // line = "\u200B" + line; 
+            // The actual double newline replacement happens after inline parsing
+            // because otherwise it influences the position of the inline modifiers
+
+            // Just act as if the top line isn't commented out
             CHAR_MAP.extend_immediately(char_map_line, charmap_idx, 1); // Extend the newline to also include the zero width space
         }
 

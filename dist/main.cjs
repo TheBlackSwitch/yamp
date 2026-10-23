@@ -132,14 +132,21 @@ var CharMap = class _CharMap {
   }
   static from_cache(lines, cached) {
     let width_map = new Array(lines.length);
+    let is_parent_cached = false;
     for (let line_idx = 0; line_idx < lines.length; line_idx++) {
       let curr_map;
-      if (!cached.char_map[line_idx]) {
+      let type = cached.entries[line_idx]?.type;
+      if ((type === "node" || type === "extend" && is_parent_cached) && cached.char_map.length > line_idx) {
+        curr_map = cached.char_map[line_idx];
+      } else {
         const len = lines[line_idx]?.length;
         curr_map = new Array(len);
         curr_map.fill(0);
-      } else {
-        curr_map = cached.char_map[line_idx];
+      }
+      if (cached.entries[line_idx]?.type === "node") {
+        is_parent_cached = true;
+      } else if (cached.entries[line_idx]?.type === "parse_again") {
+        is_parent_cached = false;
       }
       width_map[line_idx] = curr_map;
     }
@@ -455,11 +462,13 @@ var Paragraph = class _Paragraph extends MultilineParser {
   finish() {
     this.#text = _Paragraph.parse_inline(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers, this.#options);
     this.#text = _Paragraph.escape_text(this.#text, this.#CHAR_MAP, this.#char_map_line, this.#charmap_idx, this.#parsers);
+    if (this.#options.add_zero_width_space_for_cursor_positions !== false) {
+      this.#text = this.#text.replaceAll(/^\n/gm, "\u200B\n");
+    }
     this.#text = this.#text.replaceAll("\n", "\n<br>");
   }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
     if (line.length <= 1 && options.add_zero_width_space_for_cursor_positions !== false) {
-      line = "\u200B" + line;
       CHAR_MAP.extend_immediately(char_map_line, charmap_idx, 1);
     }
     if (!this.try_extend(ast, line)) {
@@ -1153,9 +1162,6 @@ var Table = class _Table extends MultilineParser {
   }
   static parse(line, all_lines, line_idx, CHAR_MAP, char_map_line, charmap_idx, ast, parsers, options) {
     let start_idx = 0;
-    while (line.charAt(start_idx) === " ") {
-      start_idx++;
-    }
     if (line.charAt(start_idx) !== "|") return Parser.FAIL;
     let next_line = all_lines[line_idx + 1] ? all_lines[line_idx + 1] : "";
     let prev_node = ast[ast.length - 1];
@@ -1168,8 +1174,7 @@ var Table = class _Table extends MultilineParser {
           let char = line.charAt(idx);
           let prev_char = line.charAt(idx - 1);
           if (char === "|" && prev_char !== "\\") {
-            let new_charmap_idx = charmap_idx + 1;
-            text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx + 1, parsers, options);
+            text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx - text.length, parsers, options);
             curr_row.push({
               "text": text
             });
@@ -1196,7 +1201,7 @@ var Table = class _Table extends MultilineParser {
       let char = line.charAt(idx);
       let prev_char = line.charAt(idx - 1);
       if (char === "|" && prev_char !== "\\") {
-        text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx + 1, parsers, options);
+        text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx - text.length, parsers, options);
         columns.push({
           "heading": text,
           "align": "left"
@@ -1897,6 +1902,8 @@ function parse_cache(lines, options) {
   let output = cache.entries.slice(0, lines.length);
   let char_map = cache.char_map.slice(0, lines.length);
   let prev_node_idx = -1;
+  cache.entries = cache.entries.slice(0, lines.length);
+  cache.char_map = cache.char_map.slice(0, lines.length);
   for (let i = 0; i < lines.length; i++) {
     if (cache.entries.length <= i) {
       output[i] = { "type": "parse_again" };

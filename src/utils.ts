@@ -123,20 +123,35 @@ export class CharMap {
     static from_cache(lines: Array<string>, cached: cached): CharMap {
         let width_map = new Array(lines.length);
 
+        let is_parent_cached: boolean = false;
+        
         for(let line_idx = 0; line_idx < lines.length; line_idx++) {
 
             let curr_map;
-            if(!cached.char_map[line_idx]) {
+
+            let type = cached.entries[line_idx]?.type;
+
+            // Use cache if it exists
+            if((type === "node" || type === "extend" && is_parent_cached) && cached.char_map.length > line_idx) {
+                curr_map = cached.char_map[line_idx];
+
+            // Generate an empty map if no cache exists
+            } else {
                 const len = lines[line_idx]?.length;
 
                 curr_map = new Array(len);
                 curr_map.fill(0);
-            } else {
-                curr_map = cached.char_map[line_idx];
+            }
+
+            if(cached.entries[line_idx]?.type === "node") {
+                is_parent_cached = true;
+            } else if (cached.entries[line_idx]?.type === "parse_again") {
+                is_parent_cached = false;
             }
 
             width_map[line_idx] = curr_map;
         }
+
         return new CharMap(width_map);
     }
 

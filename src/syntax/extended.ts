@@ -61,10 +61,6 @@ export class Table extends MultilineParser {
     static parse(line: string, all_lines: Array<string>, line_idx: number, CHAR_MAP: CharMap, char_map_line: number, charmap_idx: number, ast: ast, parsers: parsers, options: options) {
 
         let start_idx = 0;
-        while(line.charAt(start_idx) === " ") {
-            start_idx++;
-        }
-
         if(line.charAt(start_idx) !== '|') return Parser.FAIL;
 
         let next_line = all_lines[line_idx + 1] ? all_lines[line_idx + 1] : "";
@@ -85,9 +81,8 @@ export class Table extends MultilineParser {
                     let prev_char = line.charAt(idx - 1);
                     if(char === "|" && prev_char !== '\\') {
 
-                        let new_charmap_idx = charmap_idx + 1;
-
-                        text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx + 1, parsers, options);
+                        // idx is the line END of this cell, subtract text len to go to the start
+                        text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx - text.length, parsers, options);
 
                         curr_row.push({
                             "text": text
@@ -125,7 +120,8 @@ export class Table extends MultilineParser {
             let prev_char = line.charAt(idx - 1);
             if(char === "|" && prev_char !== "\\") {
 
-                text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx + 1, parsers, options);
+                // The idx is the line END of this cell, subtract the text length to go to the start
+                text = this.parse_inline(text, CHAR_MAP, char_map_line, charmap_idx + idx - text.length, parsers, options);
 
                 columns.push({
                     "heading": text,
