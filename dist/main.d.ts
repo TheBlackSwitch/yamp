@@ -305,10 +305,15 @@ declare class Underlined extends InlineParser {
 }
 
 declare const default_options: options;
-declare function set_options(options: options): void;
-declare function parse(text: string): {
-    html: string;
-    char_map: absolute_map;
-};
+declare class YAMP {
+    #private;
+    set_options(options: options): void;
+    parse(text: string): {
+        html: string;
+        char_map: absolute_map;
+    };
+    parse_to_lines(text: string): string[];
+    clear_cache(): void;
+}
 
-export { AlternateHeader, BlockQuote, CharMap, Code, CodeBlock, Color, Emphasis, EscapeIncompleteHtml, Header, Highlight, HorizontalRule, Image, InlineModifer, InlineParser, IsTypeOf, Link, List, MultilineParser, Paragraph, Parser, SingleLineParser, Strikethrough, StringHelper, Table, Underlined, UnderscoreEmphasis, default_options, parse, set_options };
+export { AlternateHeader, BlockQuote, CharMap, Code, CodeBlock, Color, Emphasis, EscapeIncompleteHtml, Header, Highlight, HorizontalRule, Image, InlineModifer, InlineParser, IsTypeOf, Link, List, MultilineParser, Paragraph, Parser, SingleLineParser, Strikethrough, StringHelper, Table, Underlined, UnderscoreEmphasis, YAMP, default_options };

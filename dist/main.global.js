@@ -47,9 +47,8 @@ var YAMP = (() => {
     Table: () => Table,
     Underlined: () => Underlined,
     UnderscoreEmphasis: () => UnderscoreEmphasis,
-    default_options: () => default_options,
-    parse: () => parse,
-    set_options: () => set_options
+    YAMP: () => YAMP,
+    default_options: () => default_options
   });
 
   // src/utils.ts
@@ -1759,255 +1758,291 @@ var YAMP = (() => {
     "debug": false
     // Enable any debug logging to the console
   };
-  var final_options;
-  var parsers_sorted;
-  function set_options(options) {
-    final_options = {};
-    for (const [option, value] of Object.entries(default_options)) {
-      if (options[option] !== void 0) {
-        final_options[option] = options[option];
-      } else {
-        final_options[option] = default_options[option];
-      }
-    }
-    verify_options(final_options);
-    if (!final_options.enabled_features) return;
-    parsers_sorted = final_options.enabled_features.sort((a, b) => b.PRIORITY - a.PRIORITY);
-    clear_cache();
-  }
-  function parse(text) {
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    if (!final_options) set_options(default_options);
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    let lines = parse_to_lines(text);
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    let cached = parse_cache(lines, final_options);
-    if (final_options?.debug) console.log("CACHED:", cached);
-    if (final_options?.debug) console.log("CACHE BEFORE CHARMAP", structuredClone(cache));
-    let CHAR_MAP = CharMap.from_cache(lines, cached);
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    const ast = gen_ast(lines, cached, CHAR_MAP, parsers_sorted, final_options);
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    const html = process_ast(ast, cached, CHAR_MAP, parsers_sorted, final_options);
-    if (final_options?.debug) console.log("AST:", ast);
-    cache_char_map(CHAR_MAP);
-    if (final_options?.debug) console.log("CACHE", structuredClone(cache));
-    return {
-      "html": html,
-      "char_map": CHAR_MAP.absolute_map()
-    };
-  }
-  function parse_to_lines(text) {
-    const lines = [];
-    let start = 0;
-    for (let i = 0; i < text.length; i++) {
-      if (text.charCodeAt(i) === 10) {
-        lines.push(text.slice(start, i + 1));
-        start = i + 1;
-      }
-    }
-    if (start < text.length) {
-      lines.push(text.slice(start));
-    }
-    if (!lines[lines.length - 1]?.endsWith("\n")) lines[lines.length - 1] += "\n";
-    return lines;
-  }
-  function gen_ast(lines, cached, CHAR_MAP, parsers, options) {
-    for (const parser of parsers) {
-      parser.init();
-    }
-    let ast = [];
-    let last_ast_node = null;
-    for (let idx = 0; idx < lines.length; idx++) {
-      let line = lines[idx];
-      let curr_entry = cached.entries[idx];
-      if (!curr_entry || !line) continue;
-      if (curr_entry.type === "node") {
-        if (!curr_entry.output) throw Error("[YAMP]: Cached AST node doesn't have a valid output!");
-        ast.push({ "type": "cached", "output": curr_entry.output, "line_idx": idx });
-        if (curr_entry.line_count) idx += curr_entry.line_count - 1;
-        if (last_ast_node !== null && last_ast_node instanceof MultilineParser) {
-          if (final_options?.debug) console.log(last_ast_node);
-          last_ast_node.finish();
-          last_ast_node = null;
-        }
-        continue;
-      }
-      const parsed = parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
-      if (idx === lines.length - 1) {
-        if (parsed instanceof MultilineParser) {
-          parsed.finish();
-        } else if (parsed === Parser.EXTEND && last_ast_node instanceof MultilineParser) {
-          last_ast_node.finish();
-        }
-      }
-      if (parsed !== Parser.EXTEND) {
-        if (last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
-          if (final_options?.debug) console.log(last_ast_node);
-          if (final_options?.debug) console.log(parsed);
-          last_ast_node.finish();
-          last_ast_node = null;
-        }
-        last_ast_node = parsed;
-        ast.push(parsed);
-        parsed.line_idx = idx;
-      }
-      cache_ast_node(idx, line, parsed);
-    }
-    return ast;
-  }
-  function parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options) {
-    if (parsers.length > 0) {
-      for (const parser of parsers) {
-        if (IsTypeOf.SingleLineParserClass(parser) || IsTypeOf.MultilineParserClass(parser)) {
-          CHAR_MAP.cancel_que();
-          let parsed = parser.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
-          if (parsed === null) throw new Error(`[YAMP]: Failed to build ast, parser ${parser} doesn't implement required method parse()!`);
-          if (parsed !== Parser.FAIL) return parsed;
-        }
-      }
-    }
-    return Paragraph.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
-  }
-  function process_ast(ast, cached, CHAR_MAP, parsers, options) {
-    let out = "";
-    for (let i = 0; i < ast.length; i++) {
-      let node = ast[i];
-      let segment;
-      if (!node) continue;
-      if (IsTypeOf.cachedAstNode(node)) {
-        segment = node.output;
-      } else {
-        segment = node.generate(options);
-        if (!segment) continue;
-        if (options.finalize_spaces !== false) segment = finalize_spaces(segment);
-        cache_output(node.line_idx, segment);
-      }
-      if (segment == null) throw new Error(`[YAMP]: Failed to generate output, parser ${node.constructor.name} doesn't implement required method generate()!`);
-      out += segment;
-    }
-    return out;
-  }
-  var cache = {
-    "entries": [],
-    "char_map": []
-  };
-  function clear_cache() {
-    cache = {
+  var YAMP = class {
+    #final_options = {};
+    #parsers_sorted = [];
+    #cache = {
       "entries": [],
       "char_map": []
     };
-  }
-  function parse_cache(lines, options) {
-    let output = cache.entries.slice(0, lines.length);
-    let char_map = cache.char_map.slice(0, lines.length);
-    let prev_node_idx = -1;
-    cache.entries = cache.entries.slice(0, lines.length);
-    cache.char_map = cache.char_map.slice(0, lines.length);
-    for (let i = 0; i < lines.length; i++) {
-      if (cache.entries.length <= i) {
-        output[i] = { "type": "parse_again" };
-        char_map[i] = null;
+    // -------------------------------
+    //  Handle options                            
+    // -------------------------------
+    set_options(options) {
+      this.#final_options = {};
+      for (const [option, value] of Object.entries(default_options)) {
+        if (options[option] !== void 0) {
+          this.#final_options[option] = options[option];
+        } else {
+          this.#final_options[option] = default_options[option];
+        }
       }
-      let entry = cache.entries[i];
-      if (!(entry && entry.type !== "parse_again" && entry.input && lines[i] === entry.input)) {
-        if (!entry || entry.type !== "extend") {
+      this.#verify_options(this.#final_options);
+      if (!this.#final_options.enabled_features) return;
+      this.#parsers_sorted = this.#final_options.enabled_features.sort((a, b) => b.PRIORITY - a.PRIORITY);
+      this.clear_cache();
+    }
+    // -------------------------------
+    //  Run the main pipeline                            
+    // -------------------------------
+    parse(text) {
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      if (!this.#final_options) this.set_options(default_options);
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      let lines = this.parse_to_lines(text);
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      let cached = this.#parse_cache(lines, this.#final_options);
+      if (this.#final_options?.debug) console.log("CACHED:", cached);
+      if (this.#final_options?.debug) console.log("CACHE BEFORE CHARMAP", structuredClone(this.#cache));
+      let CHAR_MAP = CharMap.from_cache(lines, cached);
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      const ast = this.#gen_ast(lines, cached, CHAR_MAP, this.#parsers_sorted, this.#final_options);
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      const html = this.#process_ast(ast, cached, CHAR_MAP, this.#parsers_sorted, this.#final_options);
+      if (this.#final_options?.debug) console.log("AST:", ast);
+      this.#cache_char_map(CHAR_MAP);
+      if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
+      return {
+        "html": html,
+        "char_map": CHAR_MAP.absolute_map()
+      };
+    }
+    // -------------------------------
+    //  Parse the text into lines                            
+    // -------------------------------
+    // Parse text into single lines whilst keeping the \n at the end
+    parse_to_lines(text) {
+      const lines = [];
+      let start = 0;
+      for (let i = 0; i < text.length; i++) {
+        if (text.charCodeAt(i) === 10) {
+          lines.push(text.slice(start, i + 1));
+          start = i + 1;
+        }
+      }
+      if (start < text.length) {
+        lines.push(text.slice(start));
+      }
+      if (!lines[lines.length - 1]?.endsWith("\n")) lines[lines.length - 1] += "\n";
+      return lines;
+    }
+    // -------------------------------
+    //  Ast generation                            
+    // -------------------------------
+    #gen_ast(lines, cached, CHAR_MAP, parsers, options) {
+      for (const parser of parsers) {
+        parser.init();
+      }
+      let ast = [];
+      let last_ast_node = null;
+      for (let idx = 0; idx < lines.length; idx++) {
+        let line = lines[idx];
+        let curr_entry = cached.entries[idx];
+        if (!curr_entry || !line) continue;
+        if (curr_entry.type === "node") {
+          if (!curr_entry.output) throw Error("[YAMP]: Cached AST node doesn't have a valid output!");
+          ast.push({ "type": "cached", "output": curr_entry.output, "line_idx": idx });
+          if (curr_entry.line_count) idx += curr_entry.line_count - 1;
+          if (last_ast_node !== null && last_ast_node instanceof MultilineParser) {
+            if (this.#final_options?.debug) console.log(last_ast_node);
+            last_ast_node.finish();
+            last_ast_node = null;
+          }
+          continue;
+        }
+        const parsed = this.#parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options);
+        if (idx === lines.length - 1) {
+          if (parsed instanceof MultilineParser) {
+            parsed.finish();
+          } else if (parsed === Parser.EXTEND && last_ast_node instanceof MultilineParser) {
+            last_ast_node.finish();
+          }
+        }
+        if (parsed !== Parser.EXTEND) {
+          if (last_ast_node !== null && last_ast_node instanceof MultilineParser && last_ast_node.constructor !== parsed.constructor) {
+            if (this.#final_options?.debug) console.log(last_ast_node);
+            if (this.#final_options?.debug) console.log(parsed);
+            last_ast_node.finish();
+            last_ast_node = null;
+          }
+          last_ast_node = parsed;
+          ast.push(parsed);
+          parsed.line_idx = idx;
+        }
+        this.#cache_ast_node(idx, line, parsed);
+      }
+      return ast;
+    }
+    #parse_single_line(line, CHAR_MAP, lines, idx, ast, parsers, options) {
+      if (parsers.length > 0) {
+        for (const parser of parsers) {
+          if (IsTypeOf.SingleLineParserClass(parser) || IsTypeOf.MultilineParserClass(parser)) {
+            CHAR_MAP.cancel_que();
+            let parsed = parser.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
+            if (parsed === null) throw new Error(`[YAMP]: Failed to build ast, parser ${parser} doesn't implement required method parse()!`);
+            if (parsed !== Parser.FAIL) return parsed;
+          }
+        }
+      }
+      return Paragraph.parse(line, lines, idx, CHAR_MAP, idx, 0, ast, parsers, options);
+    }
+    // -------------------------------
+    //  Html generation                            
+    // -------------------------------
+    #process_ast(ast, cached, CHAR_MAP, parsers, options) {
+      let out = "";
+      for (let i = 0; i < ast.length; i++) {
+        let node = ast[i];
+        let segment;
+        if (!node) continue;
+        if (IsTypeOf.cachedAstNode(node)) {
+          segment = node.output;
+        } else {
+          segment = node.generate(options);
+          if (!segment) continue;
+          if (options.finalize_spaces !== false) segment = this.#finalize_spaces(segment);
+          this.#cache_output(node.line_idx, segment);
+        }
+        if (segment == null) throw new Error(`[YAMP]: Failed to generate output, parser ${node.constructor.name} doesn't implement required method generate()!`);
+        out += segment;
+      }
+      return out;
+    }
+    // ==========================================================================================================================================
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    //                                                           CACHING                                                                      
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================================================
+    clear_cache() {
+      this.#cache = {
+        "entries": [],
+        "char_map": []
+      };
+    }
+    // Re-use any lines from the previous run
+    #parse_cache(lines, options) {
+      let output = this.#cache.entries.slice(0, lines.length);
+      let char_map = this.#cache.char_map.slice(0, lines.length);
+      let prev_node_idx = -1;
+      this.#cache.entries = this.#cache.entries.slice(0, lines.length);
+      this.#cache.char_map = this.#cache.char_map.slice(0, lines.length);
+      for (let i = 0; i < lines.length; i++) {
+        if (this.#cache.entries.length <= i) {
           output[i] = { "type": "parse_again" };
           char_map[i] = null;
         }
-        if (prev_node_idx >= 0) {
-          let line_idx = prev_node_idx;
-          if (final_options?.debug) console.log(line_idx, i);
-          while (entry && entry.type === "extend" || line_idx < i) {
-            output[line_idx] = { "type": "parse_again" };
-            char_map[line_idx] = null;
-            line_idx++;
-            entry = cache.entries[line_idx];
+        let entry = this.#cache.entries[i];
+        if (!(entry && entry.type !== "parse_again" && entry.input && lines[i] === entry.input)) {
+          if (!entry || entry.type !== "extend") {
+            output[i] = { "type": "parse_again" };
+            char_map[i] = null;
           }
-          entry = cache.entries[i];
-          if (final_options?.debug) console.log(line_idx, i);
+          if (prev_node_idx >= 0) {
+            let line_idx = prev_node_idx;
+            if (this.#final_options?.debug) console.log(line_idx, i);
+            while (entry && entry.type === "extend" || line_idx < i) {
+              output[line_idx] = { "type": "parse_again" };
+              char_map[line_idx] = null;
+              line_idx++;
+              entry = this.#cache.entries[line_idx];
+            }
+            entry = this.#cache.entries[i];
+            if (this.#final_options?.debug) console.log(line_idx, i);
+          }
         }
+        if (entry && entry.type === "node") prev_node_idx = i;
       }
-      if (entry && entry.type === "node") prev_node_idx = i;
-    }
-    while (cache.entries.length < lines.length) {
-      cache.entries.push({ "type": "parse_again" });
-    }
-    return {
-      "entries": output,
-      "char_map": char_map
-    };
-  }
-  var last_node_idx = 0;
-  function cache_ast_node(line_idx, input, parsed) {
-    if (final_options?.debug) console.log("APPLY", line_idx, input, parsed);
-    if (parsed === Parser.EXTEND && cache && cache.entries.length > 0) {
-      let last_node = cache.entries[last_node_idx];
-      if (last_node && last_node.type === "node") last_node.line_count = last_node.line_count ? last_node.line_count + 1 : 1;
-      cache.entries[line_idx] = {
-        "type": "extend",
-        "input": input
-      };
-    } else {
-      last_node_idx = line_idx;
-      cache.entries[line_idx] = {
-        "type": "node",
-        "input": input,
-        "line_count": 1
+      while (this.#cache.entries.length < lines.length) {
+        this.#cache.entries.push({ "type": "parse_again" });
+      }
+      return {
+        "entries": output,
+        "char_map": char_map
       };
     }
-  }
-  function cache_output(line_idx, output) {
-    let entry = cache.entries[line_idx];
-    if (!entry || entry.type !== "node") return console.warn("[YAMP]: Whoops an extend line somehow got a corresponding output. Please report this as an issue.");
-    entry.output = output;
-  }
-  function cache_char_map(char_map) {
-    cache.char_map = char_map.get_copy();
-  }
-  function finalize_spaces(input) {
-    let inside_html = false;
-    let out = "";
-    for (let i = 0; i < input.length; i++) {
-      let char = input.charAt(i);
-      if (char === "<") {
-        for (let si = i; si < input.length; si++) {
-          if (input.charAt(si) === ">") {
-            out += input.slice(i, si);
-            i = si - 1;
-            break;
-          }
-        }
-      } else if (char === " ") {
-        out += "&nbsp;";
+    #last_node_idx = 0;
+    // Cache a node in the hope that we'll be able to use it later
+    #cache_ast_node(line_idx, input, parsed) {
+      if (this.#final_options?.debug) console.log("APPLY", line_idx, input, parsed);
+      if (parsed === Parser.EXTEND && this.#cache && this.#cache.entries.length > 0) {
+        let last_node = this.#cache.entries[this.#last_node_idx];
+        if (last_node && last_node.type === "node") last_node.line_count = last_node.line_count ? last_node.line_count + 1 : 1;
+        this.#cache.entries[line_idx] = {
+          "type": "extend",
+          "input": input
+        };
       } else {
-        out += char;
+        this.#last_node_idx = line_idx;
+        this.#cache.entries[line_idx] = {
+          "type": "node",
+          "input": input,
+          "line_count": 1
+        };
       }
     }
-    return out;
-  }
-  function verify_options(options) {
-    if (!(options.enabled_features instanceof Array)) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'enabled_features' must be of type array");
+    // Cache the output of a node in the hope that we'll be able to use it later
+    #cache_output(line_idx, output) {
+      let entry = this.#cache.entries[line_idx];
+      if (!entry || entry.type !== "node") return console.warn("[YAMP]: Whoops an extend line somehow got a corresponding output. Please report this as an issue.");
+      entry.output = output;
     }
-    for (const parser of options.enabled_features) {
-      if (!(parser.prototype instanceof Parser)) throw Error(`[YAMP]: Parser entries must be instance of Parser but found: ${parser}`);
+    #cache_char_map(char_map) {
+      this.#cache.char_map = char_map.get_copy();
     }
-    if (options.disable_paragraph_elements !== true && options.disable_paragraph_elements !== false) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'disable_paragraph_elements' must be of type boolean");
+    // ==========================================================================================================================================
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    //                                                         HANDLE SPACES                                                                       
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================================================
+    #finalize_spaces(input) {
+      let inside_html = false;
+      let out = "";
+      for (let i = 0; i < input.length; i++) {
+        let char = input.charAt(i);
+        if (char === "<") {
+          for (let si = i; si < input.length; si++) {
+            if (input.charAt(si) === ">") {
+              out += input.slice(i, si);
+              i = si - 1;
+              break;
+            }
+          }
+        } else if (char === " ") {
+          out += "&nbsp;";
+        } else {
+          out += char;
+        }
+      }
+      return out;
     }
-    if (options.add_zero_width_space_for_cursor_positions !== true && options.add_zero_width_space_for_cursor_positions !== false) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'add_zero_width_space_for_cursor_positions' must be of type boolean");
+    // ==========================================================================================================================================
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    //                                                        VERIFY OPTIONS                                                                       
+    // ------------------------------------------------------------------------------------------------------------------------------------------
+    // ==========================================================================================================================================
+    #verify_options(options) {
+      if (!(options.enabled_features instanceof Array)) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'enabled_features' must be of type array");
+      }
+      for (const parser of options.enabled_features) {
+        if (!(parser.prototype instanceof Parser)) throw Error(`[YAMP]: Parser entries must be instance of Parser but found: ${parser}`);
+      }
+      if (options.disable_paragraph_elements !== true && options.disable_paragraph_elements !== false) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'disable_paragraph_elements' must be of type boolean");
+      }
+      if (options.add_zero_width_space_for_cursor_positions !== true && options.add_zero_width_space_for_cursor_positions !== false) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'add_zero_width_space_for_cursor_positions' must be of type boolean");
+      }
+      if (options.enable_trailing_linebreaks !== true && options.enable_trailing_linebreaks !== false) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'enable_trailing_linebreaks' must be of type boolean");
+      }
+      if (options.finalize_spaces !== true && options.finalize_spaces !== false) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'finalize_spaces' must be of type boolean");
+      }
+      if (options.debug !== true && options.debug !== false) {
+        throw new Error("[YAMP]: failed to parse, invalid options! Field 'debug' must be of type boolean");
+      }
     }
-    if (options.enable_trailing_linebreaks !== true && options.enable_trailing_linebreaks !== false) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'enable_trailing_linebreaks' must be of type boolean");
-    }
-    if (options.finalize_spaces !== true && options.finalize_spaces !== false) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'finalize_spaces' must be of type boolean");
-    }
-    if (options.debug !== true && options.debug !== false) {
-      throw new Error("[YAMP]: failed to parse, invalid options! Field 'debug' must be of type boolean");
-    }
-  }
+  };
   return __toCommonJS(main_exports);
 })();

@@ -1,5 +1,7 @@
-import * as Markdown from './lib/yamp.js';
+import { YAMP, Header, AlternateHeader, BlockQuote, Emphasis, UnderscoreEmphasis, Strikethrough, List, Code, CodeBlock, Link, Image, HorizontalRule, Table, Color, Highlight, Underlined, EscapeIncompleteHtml} from './lib/yamp.js';
 import DOMPurify from 'https://cdn.jsdelivr.net/npm/dompurify/+esm';
+
+const parser = new YAMP();
 
 const input_elem = document.getElementById('markdown_input');
 const options_elem = document.getElementById('markdown_options');
@@ -51,26 +53,26 @@ function update_options() {
         "enabled_features": []
     };
 
-    if(options && options.enabled_features && options.enabled_features.includes('Header')) real_options.enabled_features.push(Markdown.Header);
-    if(options && options.enabled_features && options.enabled_features.includes('AlternateHeader')) real_options.enabled_features.push(Markdown.AlternateHeader);
-    if(options && options.enabled_features && options.enabled_features.includes('BlockQuote')) real_options.enabled_features.push(Markdown.BlockQuote);
-    if(options && options.enabled_features && options.enabled_features.includes('Emphasis')) real_options.enabled_features.push(Markdown.Emphasis);
-    if(options && options.enabled_features && options.enabled_features.includes('UnderscoreEmphasis')) real_options.enabled_features.push(Markdown.UnderscoreEmphasis);
-    if(options && options.enabled_features && options.enabled_features.includes('Strikethrough')) real_options.enabled_features.push(Markdown.Strikethrough);
-    if(options && options.enabled_features && options.enabled_features.includes('List')) real_options.enabled_features.push(Markdown.List);
-    if(options && options.enabled_features && options.enabled_features.includes('Code')) real_options.enabled_features.push(Markdown.Code);
-    if(options && options.enabled_features && options.enabled_features.includes('CodeBlock')) real_options.enabled_features.push(Markdown.CodeBlock);
-    if(options && options.enabled_features && options.enabled_features.includes('Link')) real_options.enabled_features.push(Markdown.Link);
-    if(options && options.enabled_features && options.enabled_features.includes('Image')) real_options.enabled_features.push(Markdown.Image);
-    if(options && options.enabled_features && options.enabled_features.includes('HorizontalRule')) real_options.enabled_features.push(Markdown.HorizontalRule);
-    if(options && options.enabled_features && options.enabled_features.includes('Table')) real_options.enabled_features.push(Markdown.Table);
-    if(options && options.enabled_features && options.enabled_features.includes('Color')) real_options.enabled_features.push(Markdown.Color);
-    if(options && options.enabled_features && options.enabled_features.includes('Highlight')) real_options.enabled_features.push(Markdown.Highlight);
-    if(options && options.enabled_features && options.enabled_features.includes('Underlined')) real_options.enabled_features.push(Markdown.Underlined);
+    if(options && options.enabled_features && options.enabled_features.includes('Header')) real_options.enabled_features.push(Header);
+    if(options && options.enabled_features && options.enabled_features.includes('AlternateHeader')) real_options.enabled_features.push(AlternateHeader);
+    if(options && options.enabled_features && options.enabled_features.includes('BlockQuote')) real_options.enabled_features.push(BlockQuote);
+    if(options && options.enabled_features && options.enabled_features.includes('Emphasis')) real_options.enabled_features.push(Emphasis);
+    if(options && options.enabled_features && options.enabled_features.includes('UnderscoreEmphasis')) real_options.enabled_features.push(UnderscoreEmphasis);
+    if(options && options.enabled_features && options.enabled_features.includes('Strikethrough')) real_options.enabled_features.push(Strikethrough);
+    if(options && options.enabled_features && options.enabled_features.includes('List')) real_options.enabled_features.push(List);
+    if(options && options.enabled_features && options.enabled_features.includes('Code')) real_options.enabled_features.push(Code);
+    if(options && options.enabled_features && options.enabled_features.includes('CodeBlock')) real_options.enabled_features.push(CodeBlock);
+    if(options && options.enabled_features && options.enabled_features.includes('Link')) real_options.enabled_features.push(Link);
+    if(options && options.enabled_features && options.enabled_features.includes('Image')) real_options.enabled_features.push(Image);
+    if(options && options.enabled_features && options.enabled_features.includes('HorizontalRule')) real_options.enabled_features.push(HorizontalRule);
+    if(options && options.enabled_features && options.enabled_features.includes('Table')) real_options.enabled_features.push(Table);
+    if(options && options.enabled_features && options.enabled_features.includes('Color')) real_options.enabled_features.push(Color);
+    if(options && options.enabled_features && options.enabled_features.includes('Highlight')) real_options.enabled_features.push(Highlight);
+    if(options && options.enabled_features && options.enabled_features.includes('Underlined')) real_options.enabled_features.push(Underlined);
     
-    if(options && options.enabled_features && options.enabled_features.includes('EscapeIncompleteHtml')) real_options.enabled_features.push(Markdown.EscapeIncompleteHtml);
+    if(options && options.enabled_features && options.enabled_features.includes('EscapeIncompleteHtml')) real_options.enabled_features.push(EscapeIncompleteHtml);
 
-    Markdown.set_options(real_options);
+    parser.set_options(real_options);
 
     update_render();
 }
@@ -81,7 +83,7 @@ function update_render() {
 
     let start = Math.floor(window.performance.now() * 1000);
 
-    let result = Markdown.parse(input_elem.value);
+    let result = parser.parse(input_elem.value);
 
     let end = Math.floor(window.performance.now() * 1000);
 
@@ -125,7 +127,7 @@ function benchmark() {
     let count = 0;
 
     while(Math.floor(window.performance.now() * 1000) - start < 10000000) {
-        Markdown.parse(input_elem.value).html;
+        parser.parse(input_elem.value).html;
         count += 1;
     }
 
