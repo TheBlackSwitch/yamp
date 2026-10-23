@@ -307,6 +307,7 @@ declare class Underlined extends InlineParser {
 declare const default_options: options;
 declare class YAMP {
     #private;
+    constructor(options?: options);
     set_options(options: options): void;
     parse(text: string): {
         html: string;

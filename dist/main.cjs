@@ -1766,6 +1766,16 @@ var YAMP = class {
     "char_map": []
   };
   // -------------------------------
+  //  Constructor                            
+  // -------------------------------
+  constructor(options) {
+    if (options !== void 0) {
+      this.set_options(options);
+    } else {
+      this.set_options(default_options);
+    }
+  }
+  // -------------------------------
   //  Handle options                            
   // -------------------------------
   set_options(options) {
@@ -1786,8 +1796,6 @@ var YAMP = class {
   //  Run the main pipeline                            
   // -------------------------------
   parse(text) {
-    if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
-    if (!this.#final_options) this.set_options(default_options);
     if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
     let lines = this.parse_to_lines(text);
     if (this.#final_options?.debug) console.log("CACHE", structuredClone(this.#cache));
