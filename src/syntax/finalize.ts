@@ -4,7 +4,7 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------
 // ==========================================================================================================================================
 
-import { InlineModifer, InlineParser } from "../parser";
+import { InlineModifier, InlineParser } from "../parser";
 import { StringHelper, type CharMap } from "../utils";
 
 interface stack_entry {
@@ -25,9 +25,9 @@ interface stack_entry {
 // Escape any incomplete HTML whilst also keeping the charmap aligned with HTML parsing
 export class EscapeIncompleteHtml extends InlineParser {
 
-    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number): Array<InlineModifer> {
+    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number): Array<InlineModifier> {
 
-        let modifiers: Array<InlineModifer> = [];
+        let modifiers: Array<InlineModifier> = [];
 
         let stack: Array<stack_entry | undefined> = [];
         let is_closing = false;
@@ -105,8 +105,8 @@ export class EscapeIncompleteHtml extends InlineParser {
                         if(found_idx === null) {
                             let curr_tag = stack[stack.length - 1];
                             if(!curr_tag) continue;
-                            modifiers.push(InlineModifer.new_replace(curr_tag.start_location, 1, '&lt;'));
-                            modifiers.push(InlineModifer.new_replace(curr_tag.start_location + curr_tag.full_text.length + 1, 1, '&gt;'));
+                            modifiers.push(InlineModifier.new_replace(curr_tag.start_location, 1, '&lt;'));
+                            modifiers.push(InlineModifier.new_replace(curr_tag.start_location + curr_tag.full_text.length + 1, 1, '&gt;'));
                             stack.splice(stack.length - 1, 1);
 
                         // Ok it isn't a faulty close tag, there's just a random tag in between
@@ -183,8 +183,8 @@ export class EscapeIncompleteHtml extends InlineParser {
 
         // Finally, turn any non closed html tags into text
         for(const entry of stack) {
-            if(entry) modifiers.push(InlineModifer.new_replace(entry.start_location, 1, '&lt;'));
-            if(entry && entry.got_closing_bracket) modifiers.push(InlineModifer.new_replace(entry.start_location + entry.full_text.length + 1, 1, '&gt;'));
+            if(entry) modifiers.push(InlineModifier.new_replace(entry.start_location, 1, '&lt;'));
+            if(entry && entry.got_closing_bracket) modifiers.push(InlineModifier.new_replace(entry.start_location + entry.full_text.length + 1, 1, '&gt;'));
         }
 
 
@@ -210,7 +210,7 @@ export class EscapeIncompleteHtml extends InlineParser {
                 }
                 
                 if(!success) {
-                    modifiers.push(InlineModifer.new_replace(i, 1, "&amp;"));
+                    modifiers.push(InlineModifier.new_replace(i, 1, "&amp;"));
                 }
 
             }
@@ -226,15 +226,15 @@ export class EscapeIncompleteHtml extends InlineParser {
                 switch(input.charAt(i)) {
                     case "<":
                         CHAR_MAP.discard_immediately(char_map_line, char_map_idx + i - 1, 1);
-                        modifiers.push(InlineModifer.new_replace(i - 1, 2, "&lt;"));
+                        modifiers.push(InlineModifier.new_replace(i - 1, 2, "&lt;"));
                         break;
                     case ">":
                         CHAR_MAP.discard_immediately(char_map_line, char_map_idx + i - 1, 1);
-                        modifiers.push(InlineModifer.new_replace(i - 1, 2, "&gt;"));
+                        modifiers.push(InlineModifier.new_replace(i - 1, 2, "&gt;"));
                         break;
                     case "&":
                         CHAR_MAP.discard_immediately(char_map_line, char_map_idx + i - 1, 1);
-                        modifiers.push(InlineModifer.new_replace(i - 1, 2, "&amp;"));
+                        modifiers.push(InlineModifier.new_replace(i - 1, 2, "&amp;"));
                         break;
                 }
             }
@@ -243,8 +243,8 @@ export class EscapeIncompleteHtml extends InlineParser {
         return modifiers;
     }
 
-    static close_html_tags(opening: stack_entry | undefined, closing: stack_entry | undefined, stack: Array<stack_entry | undefined>, input: string, CHAR_MAP: CharMap, char_map_line: number): Array<InlineModifer> | null {
-        let modifiers: Array<InlineModifer> = [];
+    static close_html_tags(opening: stack_entry | undefined, closing: stack_entry | undefined, stack: Array<stack_entry | undefined>, input: string, CHAR_MAP: CharMap, char_map_line: number): Array<InlineModifier> | null {
+        let modifiers: Array<InlineModifier> = [];
         
         if(opening === undefined || closing === undefined) throw Error('[YAMP]: Failed to close html tags, opening and or closing tag is undefined!')
         if(opening?.invalid_attributes) { // Invalid html atributes so don't close and 
@@ -262,13 +262,13 @@ export class EscapeIncompleteHtml extends InlineParser {
             // Remove any trailing newline after the opening tag
             let next_char = input.charAt(opening.start_location + opening.full_text.length + 2);
             if(next_char === "\n") {
-                modifiers.push(InlineModifer.new_delete(opening.start_location + opening.full_text.length + 2, 1, true));
+                modifiers.push(InlineModifier.new_delete(opening.start_location + opening.full_text.length + 2, 1, true));
             }
 
             // Remove any trailing newline after the closing tag
             next_char = input.charAt(closing.start_location + closing.full_text.length + 2);
             if(next_char === "\n") {
-                modifiers.push(InlineModifer.new_delete(closing.start_location + closing.full_text.length + 2, 1, true));
+                modifiers.push(InlineModifier.new_delete(closing.start_location + closing.full_text.length + 2, 1, true));
             }
             
             return modifiers;

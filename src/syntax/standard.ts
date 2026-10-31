@@ -4,7 +4,7 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------
 // ==========================================================================================================================================
 
-import { InlineModifer, InlineParser, MultilineParser, Parser, SingleLineParser } from "../parser";
+import { InlineModifier, InlineParser, MultilineParser, Parser, SingleLineParser } from "../parser";
 import type { ast, ast_node, options, parsers } from "../public_types";
 import type { parser_extend, parser_fail } from "../types";
 import { CharMap, IsTypeOf, StringHelper } from "../utils";
@@ -372,18 +372,18 @@ export class Emphasis extends InlineParser {
                 if(char !== "*") end_pos -= 1; // look at the condition above. The indexing of i is different there
 
                 if(final_count === 1) {
-                    modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<em>', true));
-                    modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</em>', true));
+                    modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<em>', true));
+                    modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</em>', true));
 
                 } else if(final_count === 2) {
                     
-                    modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<strong>', true));
-                    modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</strong>', true));
+                    modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<strong>', true));
+                    modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</strong>', true));
 
                 } else if(final_count >= 3) {
                     
-                    modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<em><strong>', true));
-                    modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</strong></em>', true));
+                    modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<em><strong>', true));
+                    modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</strong></em>', true));
 
                 }
 
@@ -466,20 +466,20 @@ export class UnderscoreEmphasis extends InlineParser {
                     if(final_count === 1) {
 
                         // Charmap is handled in the modifier so no need for that
-                        modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<em>', true));
-                        modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</em>', true));
+                        modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<em>', true));
+                        modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</em>', true));
 
                     } else if(final_count === 2) {
                         
                         // Charmap is handled in the modifier so no need for that
-                        modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<strong>', true));
-                        modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</strong>', true));
+                        modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<strong>', true));
+                        modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</strong>', true));
 
                     } else if(final_count >= 3) {
                                                 
                         // Charmap is handled in the modifier so no need for that
-                        modifiers.push(InlineModifer.new_replace(start_pos, final_count, '<em><strong>', true));
-                        modifiers.push(InlineModifer.new_replace(end_pos - final_count + 1, final_count, '</strong></em>', true));
+                        modifiers.push(InlineModifier.new_replace(start_pos, final_count, '<em><strong>', true));
+                        modifiers.push(InlineModifier.new_replace(end_pos - final_count + 1, final_count, '</strong></em>', true));
 
                     }
 
@@ -761,8 +761,8 @@ export class Code extends InlineParser {
                     if(backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + ending.start + 1, backtick.count - 1);
                     if(backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + backtick.start + backtick.count - 1, backtick.count - 1);
 
-                    modifiers.push(InlineModifer.new_replace(ending.start, backtick.count, "</code>\u200B"));
-                    modifiers.push(InlineModifer.new_replace(backtick.start, backtick.count, "<code>\u200B"));
+                    modifiers.push(InlineModifier.new_replace(ending.start, backtick.count, "</code>\u200B"));
+                    modifiers.push(InlineModifier.new_replace(backtick.start, backtick.count, "<code>\u200B"));
 
                     i = si;
                     success = true;
@@ -853,8 +853,8 @@ export class Link extends InlineParser {
                 let title = link_part.slice(title_start + 1, link_part.length - 1);
                 let link_ = link_part.slice(0, title_start - 1);
                 
-                modifiers.push(InlineModifer.new_replace(i, 1, `<a href="${link_}" class="link" title="${title}">`, true));
-                modifiers.push(InlineModifer.new_replace(i + text_part.length + 1, 3 + link_part.length, '</a>', true));
+                modifiers.push(InlineModifier.new_replace(i, 1, `<a href="${link_}" class="link" title="${title}">`, true));
+                modifiers.push(InlineModifier.new_replace(i + text_part.length + 1, 3 + link_part.length, '</a>', true));
 
             } else if(
                 link_part_done && !text_part_open || 
@@ -948,7 +948,7 @@ export class Image extends InlineParser {
                 let title = image_part.slice(title_start + 1, image_part.length - 1);
                 let image_source = image_part.slice(0, title_start - 1);
 
-                modifiers.push(InlineModifer.new_replace(i - 1, text_part.length + image_part.length + 5, `<img src="${image_source}" title="${title}" alt="${text_part}">`, true));
+                modifiers.push(InlineModifier.new_replace(i - 1, text_part.length + image_part.length + 5, `<img src="${image_source}" title="${title}" alt="${text_part}">`, true));
             
             } else if(
                 image_part_done && !text_part_open || 
