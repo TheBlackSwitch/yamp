@@ -69,27 +69,27 @@ export abstract class Parser {
 // -------------------------------
 
 export class InlineParser extends Parser {
-    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): Array<InlineModifer> {  // Process a single line and return a list of modifiers
+    static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options): Array<InlineModifier> {  // Process a single line and return a list of modifiers
         return [];
     }
 }
 
-export class InlineModifer {
+export class InlineModifier {
     #index: number = 0;
     #data: inline_modifier_type;
     #params: object = {};
     #modify_char_map: boolean = true;
 
-    static new_insert(idx: number, value: string, modify_char_map = false): InlineModifer {
-        return new InlineModifer({"type": "insert", "value": value}, idx, modify_char_map);
+    static new_insert(idx: number, value: string, modify_char_map = false): InlineModifier {
+        return new InlineModifier({"type": "insert", "value": value}, idx, modify_char_map);
     }
 
-    static new_delete(idx: number, count: number, modify_char_map = false): InlineModifer {
-        return new InlineModifer({"type": "delete", "count": count}, idx, modify_char_map);
+    static new_delete(idx: number, count: number, modify_char_map = false): InlineModifier {
+        return new InlineModifier({"type": "delete", "count": count}, idx, modify_char_map);
     }
 
-    static new_replace(idx: number, count: number, new_value: string, modify_char_map = false): InlineModifer {
-        return new InlineModifer({"type": "replace", "value": new_value, "count": count}, idx, modify_char_map);
+    static new_replace(idx: number, count: number, new_value: string, modify_char_map = false): InlineModifier {
+        return new InlineModifier({"type": "replace", "value": new_value, "count": count}, idx, modify_char_map);
     }
 
     get index(): number {
@@ -137,7 +137,7 @@ export class SingleLineParser extends Parser {
             parsers === undefined || options === undefined
         ) throw Error("[YAMP]: Failed to run function parse_inline(), missing arguments to function! Expected 6");
         if(parsers.length > 0) {
-            let modifiers: Array<InlineModifer> = [];
+            let modifiers: Array<InlineModifier> = [];
 
             for(const parser of parsers) {
                 if(IsTypeOf.InlineParserClass(parser)) {
@@ -145,7 +145,7 @@ export class SingleLineParser extends Parser {
                     if(result == undefined) throw Error(`[YAMP]: Failed to run function parse_inline(), method parse() of parser ${parser.constructor.name} returned an unexpected value. Expected type Array[InlineParser].`);
                     if(result.length === 0) continue; 
                     for(const res of result) {
-                        if(!(res instanceof InlineModifer)) throw Error(`[YAMP]: Failed to run function parse_inline(), method parse() of parser ${parser.constructor.name} returned an unexpected value. Expected type Array[InlineParser].`);
+                        if(!(res instanceof InlineModifier)) throw Error(`[YAMP]: Failed to run function parse_inline(), method parse() of parser ${parser.constructor.name} returned an unexpected value. Expected type Array[InlineParser].`);
                     }
                     modifiers.push(...result);
                 }

@@ -4,7 +4,7 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------
 // ==========================================================================================================================================
 
-import { InlineModifer, InlineParser } from "../parser";
+import { InlineModifier, InlineParser } from "../parser";
 import type { options } from "../public_types";
 import { StringHelper, type CharMap } from "../utils";
 
@@ -23,7 +23,7 @@ export class Color extends InlineParser {
     static parse(input: string, CHAR_MAP: CharMap, char_map_line: number, char_map_idx: number, options: options) {
         if(!input.includes("]") || !input.includes("[") || !input.includes("|")) return [];
 
-        let modifiers: Array<InlineModifer> = [];
+        let modifiers: Array<InlineModifier> = [];
 
         let color_start = 0;
         let color_opened = false;
@@ -47,8 +47,8 @@ export class Color extends InlineParser {
                     continue;
                 }
 
-                modifiers.push(InlineModifer.new_replace(color_start, color_end - color_start + 1, `<span style="color: ${color_part};">`, true));
-                modifiers.push(InlineModifer.new_replace(i, 1, '</span>', true));
+                modifiers.push(InlineModifier.new_replace(color_start, color_end - color_start + 1, `<span style="color: ${color_part};">`, true));
+                modifiers.push(InlineModifier.new_replace(i, 1, '</span>', true));
                 
             } else if(color_opened && !color_done && !StringHelper.is_text_char(char) && char !== "#") {
                 color_opened = false;
@@ -117,8 +117,8 @@ export class Highlight extends InlineParser {
                     if(backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + ending.start + 1, backtick.count - 1);
                     if(backtick.count > 1) CHAR_MAP.discard_immediately(char_map_line, char_map_idx + backtick.start + backtick.count - 1, backtick.count - 1);
 
-                    modifiers.push(InlineModifer.new_replace(ending.start, backtick.count, "</mark>\u200B"));
-                    modifiers.push(InlineModifer.new_replace(backtick.start, backtick.count, "<mark>\u200B"));
+                    modifiers.push(InlineModifier.new_replace(ending.start, backtick.count, "</mark>\u200B"));
+                    modifiers.push(InlineModifier.new_replace(backtick.start, backtick.count, "<mark>\u200B"));
 
                     i = si;
                     success = true;
@@ -194,8 +194,8 @@ export class Underlined extends InlineParser {
                 // Yay it can be closed so replace the string
                 if(ending.count === squiggle.count) {
 
-                    modifiers.push(InlineModifer.new_replace(ending.start, squiggle.count, "</u>", true));
-                    modifiers.push(InlineModifer.new_replace(squiggle.start, squiggle.count, "<u>", true));
+                    modifiers.push(InlineModifier.new_replace(ending.start, squiggle.count, "</u>", true));
+                    modifiers.push(InlineModifier.new_replace(squiggle.start, squiggle.count, "<u>", true));
 
                     i = si;
                     success = true;

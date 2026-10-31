@@ -4,7 +4,7 @@
 // ------------------------------------------------------------------------------------------------------------------------------------------
 // ==========================================================================================================================================
 
-import { InlineModifer, InlineParser, MultilineParser, Parser } from "../parser";
+import { InlineModifier, InlineParser, MultilineParser, Parser } from "../parser";
 import type { ast, options, parsers } from "../public_types";
 import { StringHelper, type CharMap } from "../utils";
 
@@ -361,8 +361,8 @@ export class Strikethrough extends InlineParser {
                 // Yay it can be closed so replace the string
                 if(ending.count === squiggle.count) {
 
-                    modifiers.push(InlineModifer.new_replace(ending.start, squiggle.count, "</s>", true));
-                    modifiers.push(InlineModifer.new_replace(squiggle.start, squiggle.count, "<s>", true));
+                    modifiers.push(InlineModifier.new_replace(ending.start, squiggle.count, "</s>", true));
+                    modifiers.push(InlineModifier.new_replace(squiggle.start, squiggle.count, "<s>", true));
 
                     i = si;
                     success = true;
